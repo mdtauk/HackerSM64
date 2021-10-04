@@ -47,9 +47,7 @@ static s32 find_wall_collisions_from_list(struct SurfaceNode *surfaceNode, struc
     register TerrainData type = SURFACE_DEFAULT;
     s32 numCols = 0;
     // Max collision radius = 200
-    if (radius > 200.0f) {
-        radius = 200.0f;
-    }
+    if (radius > 200.0f) radius = 200.0f;
     // Stay in this loop until out of walls.
     while (surfaceNode != NULL) {
         surf        = surfaceNode->surface;
@@ -126,9 +124,7 @@ s32 f32_find_wall_collision(f32 *xPtr, f32 *yPtr, f32 *zPtr, f32 offsetY, f32 ra
     s32 numCollisions  = 0;
     collision.offsetY  = offsetY;
     collision.radius   = radius;
-    collision.pos[0]        = *xPtr;
-    collision.pos[1]        = *yPtr;
-    collision.pos[2]        = *zPtr;
+    vec3_set(collision.pos, *xPtr, *yPtr, *zPtr);
     collision.numWalls = 0;
     numCollisions      = find_wall_collisions(&collision);
     *xPtr              = collision.pos[0];
@@ -327,7 +323,7 @@ f32 find_ceil(f32 posX, f32 posY, f32 posZ, struct Surface **pceil) {
 
     if (is_outside_level_bounds(x, z)) {
 #if PUPPYPRINT_DEBUG
-        collisionTime[perfIteration] += osGetTime() - first;
+        collisionTime[perfIteration] += (osGetTime() - first);
 #endif
         return height;
     }
@@ -345,7 +341,7 @@ f32 find_ceil(f32 posX, f32 posY, f32 posZ, struct Surface **pceil) {
     ceil = find_ceil_from_list(surfaceList, x, y, z, &height);
 
     if (dynamicHeight < height) {
-        ceil = dynamicCeil;
+        ceil   = dynamicCeil;
         height = dynamicHeight;
     }
 
@@ -355,7 +351,7 @@ f32 find_ceil(f32 posX, f32 posY, f32 posZ, struct Surface **pceil) {
     gNumCalls.ceil++;
 
 #if PUPPYPRINT_DEBUG
-    collisionTime[perfIteration] += osGetTime() - first;
+    collisionTime[perfIteration] += (osGetTime() - first);
 #endif
 
     return height;
@@ -373,12 +369,25 @@ f32 unused_obj_find_floor_height(struct Object *obj) {
     return find_floor(obj->oPosX, obj->oPosY, obj->oPosZ, &floor);
 }
 
+static s16 check_within_triangle_bounds(s32 x, s32 z, struct Surface *surf) {
+    register Vec3i vx, vz;
+    vx[0] = surf->vertex1[0];
+    vz[0] = surf->vertex1[2];
+    vx[1] = surf->vertex2[0];
+    vz[1] = surf->vertex2[2];
+    if ((vz[0] - z) * (vx[1] - vx[0]) - (vx[0] - x) * (vz[1] - vz[0]) < 0) return FALSE;
+    vx[2] = surf->vertex3[0];
+    vz[2] = surf->vertex3[2];
+    if ((vz[1] - z) * (vx[2] - vx[1]) - (vx[1] - x) * (vz[2] - vz[1]) < 0) return FALSE;
+    if ((vz[2] - z) * (vx[0] - vx[2]) - (vx[2] - x) * (vz[0] - vz[2]) < 0) return FALSE;
+    return TRUE;
+}
+
 /**
  * Iterate through the list of floors and find the first floor under a given point.
  */
 static struct Surface *find_floor_from_list(struct SurfaceNode *surfaceNode, s32 x, s32 y, s32 z, f32 *pheight) {
     register struct Surface *surf, *floor = NULL;
-    register Vec3i vx, vz;
     f32 height;
     s16 type = SURFACE_DEFAULT;
     *pheight = FLOOR_LOWER_LIMIT;
@@ -398,17 +407,8 @@ static struct Surface *find_floor_from_list(struct SurfaceNode *surfaceNode, s32
             continue; // If we are not checking for the camera, ignore camera only floors.
         }
         if (y < (surf->lowerY - 30)) continue;
-        vx[0] = surf->vertex1[0];
-        vz[0] = surf->vertex1[2];
-        vx[1] = surf->vertex2[0];
-        vz[1] = surf->vertex2[2];
-        // Check that the point is within the triangle bounds.
-        if ((vz[0] - z) * (vx[1] - vx[0]) - (vx[0] - x) * (vz[1] - vz[0]) < 0) continue;
-        // To slightly save on computation time, set this later.
-        vx[2] = surf->vertex3[0];
-        vz[2] = surf->vertex3[2];
-        if ((vz[1] - z) * (vx[2] - vx[1]) - (vx[1] - x) * (vz[2] - vz[1]) < 0) continue;
-        if ((vz[2] - z) * (vx[0] - vx[2]) - (vx[2] - x) * (vz[0] - vz[2]) < 0) continue;
+        // Check whether the point is within the triangle bounds.
+        if (!check_within_triangle_bounds(x, z, surf)) continue;
         // Find the height of the floor at a given location.
         height = get_surface_height_at_location(x, z, surf);
         if (height < *pheight) continue;
@@ -419,21 +419,6 @@ static struct Surface *find_floor_from_list(struct SurfaceNode *surfaceNode, s32
         if ((height - 78.0f) == y) break;
     }
     return floor;
-}
-
-
-static s16 check_within_triangle_bounds(s32 x, s32 z, struct Surface *surf) {
-    register Vec3i vx, vz;
-    vx[0] = surf->vertex1[0];
-    vz[0] = surf->vertex1[2];
-    vx[1] = surf->vertex2[0];
-    vz[1] = surf->vertex2[2];
-    if ((vz[0] - z) * (vx[1] - vx[0]) - (vx[0] - x) * (vz[1] - vz[0]) < 0) return FALSE;
-    vx[2] = surf->vertex3[0];
-    vz[2] = surf->vertex3[2];
-    if ((vz[1] - z) * (vx[2] - vx[1]) - (vx[1] - x) * (vz[2] - vz[1]) < 0) return FALSE;
-    if ((vz[2] - z) * (vx[0] - vx[2]) - (vx[2] - x) * (vz[0] - vz[2]) < 0) return FALSE;
-    return TRUE;
 }
 
 /**
@@ -495,7 +480,6 @@ f32 find_floor_height(f32 x, f32 y, f32 z) {
  */
 f32 unused_find_dynamic_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor) {
     struct SurfaceNode *surfaceList;
-    struct Surface *floor;
     f32 floorHeight = FLOOR_LOWER_LIMIT;
 
     // Would normally cause PUs, but dynamic floors unload at that range.
@@ -508,9 +492,7 @@ f32 unused_find_dynamic_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfl
     s32 cellZ = GET_CELL_COORD(z);
 
     surfaceList = gDynamicSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_FLOORS].next;
-    floor = find_floor_from_list(surfaceList, x, y, z, &floorHeight);
-
-    *pfloor = floor;
+    *pfloor = find_floor_from_list(surfaceList, x, y, z, &floorHeight);
 
     return floorHeight;
 }
@@ -524,10 +506,10 @@ f32 find_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor) {
     OSTime first = osGetTime();
 #endif
 
-    struct Surface *floor, *dynamicFloor;
+    struct Surface *floor = NULL, *dynamicFloor = NULL;
     struct SurfaceNode *surfaceList;
 
-    f32 height       = FLOOR_LOWER_LIMIT;
+    f32 height        = FLOOR_LOWER_LIMIT;
     f32 dynamicHeight = FLOOR_LOWER_LIMIT;
 
     //! (Parallel Universes) Because position is casted to an s16, reaching higher
@@ -541,7 +523,7 @@ f32 find_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor) {
 
     if (is_outside_level_bounds(x, z)) {
 #if PUPPYPRINT_DEBUG
-        collisionTime[perfIteration] += osGetTime() - first;
+        collisionTime[perfIteration] += (osGetTime() - first);
 #endif
         return height;
     }
@@ -630,13 +612,12 @@ s32 find_water_level_and_floor(s32 x, s32 z, struct Surface **pfloor) {
     s32 numRegions;
     s32 val;
     s32 loX, hiX, loZ, hiZ;
-    s32 waterLevel = FLOOR_LOWER_LIMIT;
     TerrainData *p = gEnvironmentRegions;
     struct Surface *floor = NULL;
 #if PUPPYPRINT_DEBUG
     OSTime first = osGetTime();
 #endif
-    waterLevel = find_water_floor(x, (gCheckingSurfaceCollisionsForCamera ? gLakituState.pos[1] : gMarioState->pos[1]), z, &floor);
+    s32 waterLevel = find_water_floor(x, (gCheckingSurfaceCollisionsForCamera ? gLakituState.pos[1] : gMarioState->pos[1]), z, &floor);
 
     if (p != NULL && waterLevel == FLOOR_LOWER_LIMIT) {
         numRegions = *p++;
@@ -710,7 +691,7 @@ s32 find_water_level(s32 x, s32 z) {
     }
 
 #if PUPPYPRINT_DEBUG
-    collisionTime[perfIteration] += osGetTime() - first;
+    collisionTime[perfIteration] += (osGetTime() - first);
 #endif
 
     return waterLevel;
@@ -756,7 +737,7 @@ s32 find_poison_gas_level(s32 x, s32 z) {
     }
 
 #if PUPPYPRINT_DEBUG
-    collisionTime[perfIteration] += osGetTime() - first;
+    collisionTime[perfIteration] += (osGetTime() - first);
 #endif
 
     return gasLevel;

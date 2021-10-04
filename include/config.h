@@ -266,7 +266,36 @@
 // Open all courses and doors. Used for debugging purposes to unlock all content.
 //#define UNLOCK_ALL
 
-// If you want to change the extended boundaries mode, go to engine/extended_bounds.h and change EXTENDED_BOUNDS_MODE
+
+/*
+    Better Extended Bounds by anonymous_moose
+        Thanks to someone2639 for the shiftable segments patch
+        Thanks to Wiseguy for the Surface Pool Full error code and 4x bounds fix
+
+    0: Regular bounds
+        Same as vanilla sm64, boundaries are (-8192 to 8191)
+        16x16 collision cells.
+    1: 2x extended bounds
+        level boundaries are twice as big (-16384 to 16383)
+        Collision calculations remain as fast as vanilla, at the cost of using more RAM.
+        32x32 collision cells.
+    2: Regular bounds (performance)
+        Same boundaries as vanilla (-8192 to 8191), but with twice the amount of collision cells
+        Trades more RAM usage for faster collision calculations.
+        32x32 collision cells.
+    3: 4x extended bounds
+        level boundaries are 4 times as big (-32768 to 32767)
+        Collision calculations remain as fast as vanilla, at the cost of using far more RAM (16 times vanilla).
+        64x64 collision cells.
+
+    If you see "SURFACE POOL FULL" or "SURFACE NODE POOL FULL" in game, you should increase
+    SURFACE_POOL_SIZE or SURFACE_NODE_POOL_SIZE, respectively, or reduce the amount of
+    collision surfaces in your level.
+*/
+// Set this to the extended bounds mode you want, then do "make clean".
+// For more details, see surface_load.h.
+#define EXTENDED_BOUNDS_MODE 1
+
 
 // -- Compatibility safeguards. Don't mess with these unless you know what you're doing.--
 #ifdef DISABLE_LIVES

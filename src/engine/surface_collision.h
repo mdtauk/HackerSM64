@@ -5,8 +5,6 @@
 
 #include "types.h"
 
-#include "engine/extended_bounds.h"
-
 #define CELL_HEIGHT_LIMIT           20000
 #define FLOOR_LOWER_LIMIT           -11000
 #define FLOOR_LOWER_LIMIT_MISC      (FLOOR_LOWER_LIMIT + 1000)

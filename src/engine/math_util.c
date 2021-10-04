@@ -4,7 +4,6 @@
 #include "engine/graph_node.h"
 #include "math_util.h"
 #include "surface_collision.h"
-#include "extended_bounds.h"
 #include "trig_tables.inc.c"
 #include "surface_load.h"
 #include "game/puppyprint.h"
