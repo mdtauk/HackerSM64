@@ -55,8 +55,8 @@ extern f32 gSineTable[];
 #define degrees_to_radians(x) (f32)(   (f32)(x) * RAD_PER_DEG       )
 #define radians_to_degrees(x) (f32)(   (f32)(x) * DEG_PER_RAD       )
 
-#define asm_abs_s(dst, src), __asm__("abs.s %0,%1" : "=f" (dst) : "f" (src));
-#define asm_abs_d(dst, src), __asm__("abs.d %0,%1" : "=f" (dst) : "f" (src));
+#define asm_abs_s(dst, src) __asm__("abs.s %0,%1" : "=f" ((dst)) : "f" ((src)));
+#define asm_abs_d(dst, src) __asm__("abs.d %0,%1" : "=f" ((dst)) : "f" ((src)));
 #define ABSF(x) ((x) > 0.0f ? (x) : -(x))
 #define ABSI(x) ((x) > 0    ? (x) : -(x))
 #define ABS(x)  ABSF((x))
@@ -547,6 +547,5 @@ s32 anim_spline_poll(Vec3f result);
 void linear_mtxf_mul_vec3f(Mat4 m, Vec3f dst, Vec3f v);
 void linear_mtxf_transpose_mul_vec3f(Mat4 m, Vec3f dst, Vec3f v);
 void mtxf_rot_trans_mul(Vec3s rot, Vec3f trans, Mat4 dest, Mat4 src);
-void find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Vec3f hit_pos, s32 flags);
 
 #endif // MATH_UTIL_H

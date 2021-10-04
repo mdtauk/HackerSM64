@@ -1686,11 +1686,9 @@ static void intro_cutscene_hide_hud_and_mario(struct MarioState *m) {
     advance_cutscene_step(m);
 }
 
-#define TIMER_SPAWN_PIPE 37
-
 static void intro_cutscene_peach_lakitu_scene(struct MarioState *m) {
     if ((s16) m->statusForCamera->cameraEvent != CAM_EVENT_START_INTRO) {
-        if (m->actionTimer++ == TIMER_SPAWN_PIPE) {
+        if (m->actionTimer++ == 37) {
             sIntroWarpPipeObj =
                 spawn_object_abs_with_rot(gCurrentObject, 0, MODEL_CASTLE_GROUNDS_WARP_PIPE,
                                           bhvStaticObject, -1328, 60, 4664, 0, 180, 0);
@@ -1698,9 +1696,6 @@ static void intro_cutscene_peach_lakitu_scene(struct MarioState *m) {
         }
     }
 }
-#undef TIMER_SPAWN_PIPE
-
-#define TIMER_RAISE_PIPE 38
 
 static void intro_cutscene_raise_pipe(struct MarioState *m) {
     sIntroWarpPipeObj->oPosY = camera_approach_f32_symmetric(sIntroWarpPipeObj->oPosY, 260.0f, 10.0f);
@@ -1709,12 +1704,11 @@ static void intro_cutscene_raise_pipe(struct MarioState *m) {
         play_sound(SOUND_MENU_EXIT_PIPE, sIntroWarpPipeObj->header.gfx.cameraToObject);
     }
 
-    if (m->actionTimer++ == TIMER_RAISE_PIPE) {
+    if (m->actionTimer++ == 38) {
         m->vel[1] = 60.0f;
         advance_cutscene_step(m);
     }
 }
-#undef TIMER_RAISE_PIPE
 
 static void intro_cutscene_jump_out_of_pipe(struct MarioState *m) {
     if (m->actionTimer == 25) {
