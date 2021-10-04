@@ -116,15 +116,15 @@ static void apply_water_current(struct MarioState *m, Vec3f step) {
     }
 }
 
-static u32 water_hit_wall(struct MarioState *m, Vec3f nextPos, struct Surface *wall) {
+// static u32 water_hit_wall(struct MarioState *m, Vec3f nextPos, struct Surface *wall) {
 
-}
-static u32 water_hit_ceil(struct MarioState *m, Vec3f nextPos, struct Surface *ceil) {
+// }
+// static u32 water_hit_ceil(struct MarioState *m, Vec3f nextPos, struct Surface *ceil) {
 
-}
-static u32 water_hit_floor(struct MarioState *m, Vec3f nextPos, struct Surface *floor) {
+// }
+// static u32 water_hit_floor(struct MarioState *m, Vec3f nextPos, struct Surface *floor) {
 
-}
+// }
 
 static u32 perform_water_full_step(struct MarioState *m, Vec3f nextPos) {
     struct WallCollisionData wallData;
@@ -1096,7 +1096,7 @@ static void update_metal_water_walking_speed(struct MarioState *m) {
         m->forwardVel += 1.1f;
     } else if (m->forwardVel <= val) {
         m->forwardVel += 1.1f - m->forwardVel / 43.0f;
-    } else if (m->floor->normal.y >= 0.95f) {
+    } else if (m->floor->normal[1] >= 0.95f) {
         m->forwardVel -= 1.0f;
     }
 

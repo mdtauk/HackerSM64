@@ -334,8 +334,8 @@ s32 perform_ground_step(struct MarioState *m) {
     set_mario_wall(m, NULL);
 
     for (i = 0; i < numSteps; i++) {
-        intendedPos[0] = m->pos[0] + m->floor->normal.y * (m->vel[0] / numSteps);
-        intendedPos[2] = m->pos[2] + m->floor->normal.y * (m->vel[2] / numSteps);
+        intendedPos[0] = m->pos[0] + m->floor->normal[1] * (m->vel[0] / numSteps);
+        intendedPos[2] = m->pos[2] + m->floor->normal[1] * (m->vel[2] / numSteps);
         intendedPos[1] = m->pos[1];
 
         stepResult = perform_ground_quarter_step(m, intendedPos);
@@ -359,18 +359,18 @@ struct Surface *check_ledge_grab(struct MarioState *m, struct Surface *prevWall,
     if ((m->vel[1] > 0.0f) || (wall == NULL)) return NULL;
     if (prevWall == NULL) prevWall = wall;
     // Return the already grabbed wall if Mario is moving into it more than the newly tested wall
-    if (((prevWall->normal.x * m->vel[0]) + (prevWall->normal.z * m->vel[2])) < ((wall->normal.x * m->vel[0]) + (wall->normal.z * m->vel[2]))) returnedWall = prevWall;
+    if (((prevWall->normal[0] * m->vel[0]) + (prevWall->normal[2] * m->vel[2])) < ((wall->normal[0] * m->vel[0]) + (wall->normal[2] * m->vel[2]))) returnedWall = prevWall;
     f32 displacementX = (nextPos[0] - intendedPos[0]);
     f32 displacementZ = (nextPos[2] - intendedPos[2]);
     // Only ledge grab if the wall displaced Mario in the opposite direction of his velocity.
     if (((displacementX * m->vel[0]) + (displacementZ * m->vel[2])) > 0.0f) returnedWall = prevWall;
-    ledgePos[0] = (nextPos[0] - (wall->normal.x * 60.0f));
-    ledgePos[2] = (nextPos[2] - (wall->normal.z * 60.0f));
+    ledgePos[0] = (nextPos[0] - (wall->normal[0] * 60.0f));
+    ledgePos[2] = (nextPos[2] - (wall->normal[2] * 60.0f));
     ledgePos[1] = find_floor(ledgePos[0], (nextPos[1] + 160.0f), ledgePos[2], ledgeFloor);
     if ((ledgeFloor == NULL)
     || ((*ledgeFloor) == NULL)
     || (ledgePos[1] < (nextPos[1] + 100.0f))
-    || ((*ledgeFloor)->normal.y < COS25)
+    || ((*ledgeFloor)->normal[1] < COS25)
     || SURFACE_IS_UNSAFE((*ledgeFloor)->type)) {
         return NULL;
     }

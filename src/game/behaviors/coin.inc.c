@@ -79,7 +79,7 @@ void bhv_coin_loop(void) {
     floor = o->oFloor;
     if (floor != NULL) {
         o->oBounciness = 0;
-        if (floor->normal.y < 0.9f) {
+        if (floor->normal[1] < 0.9f) {
             targetYaw = SURFACE_YAW(floor);
             cur_obj_rotate_yaw_toward(targetYaw, 0x400);
         }

@@ -133,28 +133,21 @@ void turn_obj_away_from_surface(f32 velX, f32 velZ, f32 nX, UNUSED f32 nY, f32 n
  */
 s32 obj_find_wall(f32 objNewX, f32 objY, f32 objNewZ, f32 objVelX, f32 objVelZ) {
     struct WallCollisionData hitbox;
-    f32 wall_nX, wall_nY, wall_nZ, objVelXCopy, objVelZCopy, objYawX, objYawZ;
-
-    hitbox.x = objNewX;
-    hitbox.y = objY;
-    hitbox.z = objNewZ;
+    Vec3f wall_n;
+    f32 objVelXCopy, objVelZCopy, objYawX, objYawZ;
+    vec3_set(hitbox.pos, objNewX, objY, objNewZ);
     hitbox.offsetY = o->hitboxHeight / 2;
     hitbox.radius = o->hitboxRadius;
 
     if (find_wall_collisions(&hitbox) != 0) {
-        o->oPosX = hitbox.x;
-        o->oPosY = hitbox.y;
-        o->oPosZ = hitbox.z;
-
-        wall_nX = hitbox.walls[0]->normal.x;
-        wall_nY = hitbox.walls[0]->normal.y;
-        wall_nZ = hitbox.walls[0]->normal.z;
+        vec3f_copy(&o->oPosVec, hitbox.pos);
+        vec3f_copy(wall_n, hitbox.walls[0]->normal);
 
         objVelXCopy = objVelX;
         objVelZCopy = objVelZ;
 
         // Turns away from the first wall only.
-        turn_obj_away_from_surface(objVelXCopy, objVelZCopy, wall_nX, wall_nY, wall_nZ, &objYawX, &objYawZ);
+        turn_obj_away_from_surface(objVelXCopy, objVelZCopy, wall_n[0], wall_n[1], wall_n[2], &objYawX, &objYawZ);
 
         o->oMoveAngleYaw = atan2s(objYawZ, objYawX);
         return FALSE;
@@ -166,23 +159,22 @@ s32 obj_find_wall(f32 objNewX, f32 objY, f32 objNewZ, f32 objVelX, f32 objVelZ) 
 /**
  * Turns an object away from steep floors, similarly to walls.
  */
-s8 turn_obj_away_from_steep_floor(struct Surface *objFloor, f32 floorY, f32 objVelX, f32 objVelZ) {
-    f32 floor_nX, floor_nY, floor_nZ, objVelXCopy, objVelZCopy, objYawX, objYawZ;
+s32 turn_obj_away_from_steep_floor(struct Surface *objFloor, f32 floorY, f32 objVelX, f32 objVelZ) {
+    Vec3f floor_n;
+    f32 objVelXCopy, objVelZCopy, objYawX, objYawZ;
 
     if (objFloor == NULL) {
         o->oMoveAngleYaw += 0x8000;
         return FALSE;
     }
 
-    floor_nX = objFloor->normal.x;
-    floor_nY = objFloor->normal.y;
-    floor_nZ = objFloor->normal.z;
+    vec3_copy(floor_n, objFloor->normal);
 
     // If the floor is steep and we are below it (i.e. walking into it), turn away from the floor.
-    if (floor_nY < 0.5f && floorY > o->oPosY) {
+    if (floor_n[1] < 0.5f && floorY > o->oPosY) {
         objVelXCopy = objVelX;
         objVelZCopy = objVelZ;
-        turn_obj_away_from_surface(objVelXCopy, objVelZCopy, floor_nX, floor_nY, floor_nZ, &objYawX, &objYawZ);
+        turn_obj_away_from_surface(objVelXCopy, objVelZCopy, floor_n[0], floor_n[1], floor_n[2], &objYawX, &objYawZ);
         o->oMoveAngleYaw = atan2s(objYawZ, objYawX);
         return FALSE;
     }
@@ -241,9 +233,8 @@ void calc_obj_friction(f32 *objFriction, f32 floor_nY) {
  * Updates an objects speed for gravity and updates Y position.
  */
 void calc_new_obj_vel_and_pos_y(struct Surface *objFloor, f32 objFloorY, f32 objVelX, f32 objVelZ) {
-    f32 floor_nX = objFloor->normal.x;
-    f32 floor_nY = objFloor->normal.y;
-    f32 floor_nZ = objFloor->normal.z;
+    Vec3f floor_n;
+    vec3_copy(floor_n, objFloor->normal);
     f32 objFriction;
 
     // Caps vertical speed with a "terminal velocity".
@@ -271,13 +262,13 @@ void calc_new_obj_vel_and_pos_y(struct Surface *objFloor, f32 objFloorY, f32 obj
 
     //! (Obj Position Crash) If you got an object with height past 2^31, the game would crash.
     if ((s32) o->oPosY >= (s32) objFloorY && (s32) o->oPosY < (s32) objFloorY + 37) {
-        obj_orient_graph(o, floor_nX, floor_nY, floor_nZ);
+        obj_orient_graph(o, floor_n[0], floor_n[1], floor_n[2]);
 
         // Adds horizontal component of gravity for horizontal speed.
-        f32 nxz = (sqr(floor_nX) + sqr(floor_nZ));
-        f32 nxyz = (nxz + sqr(floor_nY));
-        objVelX += floor_nX * (nxz) / (nxyz) * o->oGravity * 2;
-        objVelZ += floor_nZ * (nxz) / (nxyz) * o->oGravity * 2;
+        f32 nxz = (sqr(floor_n[0]) + sqr(floor_n[2]));
+        f32 nxyz = (nxz + sqr(floor_n[1]));
+        objVelX += floor_n[0] * (nxz) / (nxyz) * o->oGravity * 2;
+        objVelZ += floor_n[2] * (nxz) / (nxyz) * o->oGravity * 2;
 
         if (objVelX < NEAR_ZERO && objVelX > -NEAR_ZERO) objVelX = 0;
         if (objVelZ < NEAR_ZERO && objVelZ > -NEAR_ZERO) objVelZ = 0;
@@ -286,15 +277,14 @@ void calc_new_obj_vel_and_pos_y(struct Surface *objFloor, f32 objFloorY, f32 obj
             o->oMoveAngleYaw = atan2s(objVelZ, objVelX);
         }
 
-        calc_obj_friction(&objFriction, floor_nY);
+        calc_obj_friction(&objFriction, floor_n[1]);
         o->oForwardVel = sqrtf(sqr(objVelX) + sqr(objVelZ)) * objFriction;
     }
 }
 
 void calc_new_obj_vel_and_pos_y_underwater(struct Surface *objFloor, f32 floorY, f32 objVelX, f32 objVelZ, f32 waterY) {
-    f32 floor_nX = objFloor->normal.x;
-    f32 floor_nY = objFloor->normal.y;
-    f32 floor_nZ = objFloor->normal.z;
+    Vec3f floor_n;
+    vec3_copy(floor_n, objFloor->normal);
 
     f32 netYAccel = (1.0f - o->oBuoyancy) * (-1.0f * o->oGravity);
     o->oVelY -= netYAccel;
@@ -327,13 +317,13 @@ void calc_new_obj_vel_and_pos_y_underwater(struct Surface *objFloor, f32 floorY,
     }
 
     if ((s32) o->oPosY >= (s32) floorY && (s32) o->oPosY < (s32) floorY + 37) {
-        obj_orient_graph(o, floor_nX, floor_nY, floor_nZ);
+        obj_orient_graph(o, floor_n[0], floor_n[1], floor_n[2]);
 
         // Adds horizontal component of gravity for horizontal speed.
-        f32 nxz = (sqr(floor_nX) + sqr(floor_nZ));
-        f32 nxyz = (nxz + sqr(floor_nY));
-        objVelX += floor_nX * (nxz) / (nxyz) * netYAccel * 2;
-        objVelZ += floor_nZ * (nxz) / (nxyz) * netYAccel * 2;
+        f32 nxz = (sqr(floor_n[0]) + sqr(floor_n[2]));
+        f32 nxyz = (nxz + sqr(floor_n[1]));
+        objVelX += floor_n[0] * (nxz) / (nxyz) * netYAccel * 2;
+        objVelZ += floor_n[2] * (nxz) / (nxyz) * netYAccel * 2;
     }
 
     if (objVelX < NEAR_ZERO && objVelX > -NEAR_ZERO) objVelX = 0;
@@ -537,16 +527,14 @@ s32 obj_check_if_facing_toward_angle(u32 base, u32 goal, s16 range) {
  */
 s32 obj_find_wall_displacement(Vec3f dist, f32 x, f32 y, f32 z, f32 radius) {
     struct WallCollisionData hitbox;
-    hitbox.x = x;
-    hitbox.y = y;
-    hitbox.z = z;
+    vec3_set(hitbox.pos, x, y, z);
     hitbox.offsetY = 10.0f;
     hitbox.radius = radius;
 
     if (find_wall_collisions(&hitbox) != 0) {
-        dist[0] = hitbox.x - x;
-        dist[1] = hitbox.y - y;
-        dist[2] = hitbox.z - z;
+        dist[0] = (hitbox.pos[0] - x);
+        dist[1] = (hitbox.pos[1] - y);
+        dist[2] = (hitbox.pos[2] - z);
         return TRUE;
     } else {
         return FALSE;

@@ -15,9 +15,9 @@
 
 #define is_outside_level_bounds(xPos, zPos) (((xPos) <= -LEVEL_BOUNDARY_MAX) || ((xPos) >=  LEVEL_BOUNDARY_MAX) || ((zPos) <= -LEVEL_BOUNDARY_MAX) || ((zPos) >=  LEVEL_BOUNDARY_MAX))
 
-#define get_surface_height_at_location(xPos, zPos, surf) (-((xPos) * (surf)->normal.x + (surf)->normal.z * (zPos) + (surf)->originOffset) / (surf)->normal.y)
+#define get_surface_height_at_location(xPos, zPos, surf) (-((xPos) * (surf)->normal[0] + (surf)->normal[2] * (zPos) + (surf)->originOffset) / (surf)->normal[1])
 
-#define SURFACE_YAW(s) (atan2s(((s)->normal.z), ((s)->normal.x)))
+#define SURFACE_YAW(s) (atan2s(((s)->normal[2]), ((s)->normal[0])))
 
 #define RAYCAST_FIND_FLOOR  (1 << 0)
 #define RAYCAST_FIND_WALL   (1 << 1)
@@ -27,7 +27,7 @@
 
 struct WallCollisionData
 {
-    /*0x00*/ f32 x, y, z;
+    /*0x00*/ Vec3f pos;
     /*0x0C*/ f32 offsetY;
     /*0x10*/ f32 radius;
     /*0x14*/ s16 unused;
@@ -38,6 +38,7 @@ struct WallCollisionData
 s32 f32_find_wall_collision(f32 *xPtr, f32 *yPtr, f32 *zPtr, f32 offsetY, f32 radius);
 s32 find_wall_collisions(struct WallCollisionData *colData);
 void resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 radius, struct WallCollisionData *collisionData);
+void resolve_and_return_all_collisions(Vec3f pos, f32 offset, f32 radius, struct WallCollisionData *collisionData);
 f32 find_ceil(f32 posX, f32 posY, f32 posZ, struct Surface **pceil);
 f32 find_floor_height(f32 x, f32 y, f32 z);
 f32 find_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor);

@@ -1104,7 +1104,7 @@ s32 ray_surface_intersect(Vec3f orig, Vec3f dir, f32 dir_length, struct Surface 
     // Ignore certain surface types.
     if ((surface->type == SURFACE_INTANGIBLE) || (surface->flags & SURFACE_FLAG_NO_CAM_COLLISION)) return FALSE;
     // Get surface normal and some other stuff
-    vec3_set(norm, 0, surface->normal.y, 0);
+    vec3_set(norm, 0, surface->normal[1], 0);
     vec3_mul_val(norm, RAY_OFFSET);
     vec3_copy(v0, surface->vertex1);
     vec3_copy(v1, surface->vertex2);

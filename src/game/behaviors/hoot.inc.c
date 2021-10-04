@@ -102,17 +102,12 @@ void hoot_surface_collision(f32 xPrev, UNUSED f32 yPrev, f32 zPrev) {
     struct Surface *floor;
     struct WallCollisionData hitbox;
     f32 floorY;
-
-    hitbox.x = o->oPosX;
-    hitbox.y = o->oPosY;
-    hitbox.z = o->oPosZ;
+    vec3_copy(hitbox.pos, &o->oPosVec);
     hitbox.offsetY = 10.0f;
     hitbox.radius  = 50.0f;
 
     if (find_wall_collisions(&hitbox) != 0) {
-        o->oPosX = hitbox.x;
-        o->oPosY = hitbox.y;
-        o->oPosZ = hitbox.z;
+        vec3_copy(&o->oPosVec, hitbox.pos);
         gMarioObject->oInteractStatus |= INT_STATUS_MARIO_DROP_FROM_HOOT; /* bit 7 */
     }
 

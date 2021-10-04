@@ -730,7 +730,7 @@ s32 look_down_slopes(s16 camYaw) {
 
     if (floor != NULL) {
         if (floor->type != SURFACE_WALL_MISC && floorDY > 0) {
-            if (floor->normal.z == 0.f && floorDY < 100.f) {
+            if (floor->normal[2] == 0.f && floorDY < 100.f) {
                 pitch = 0x05B0;
             } else {
                 // Add the slope's angle of declination to the pitch
@@ -3590,16 +3590,13 @@ s32 update_camera_hud_status(struct Camera *c) {
 s32 collide_with_walls(Vec3f pos, f32 offsetY, f32 radius) {
     struct WallCollisionData collisionData;
     struct Surface *wall = NULL;
-    f32 normX, normY, normZ;
+    Vec3f norm;
     f32 originOffset;
     f32 offset;
     Vec3f newPos[MAX_REFEREMCED_WALLS];
     s32 i;
     s32 numCollisions = 0;
-
-    collisionData.x = pos[0];
-    collisionData.y = pos[1];
-    collisionData.z = pos[2];
+    vec3f_copy(collisionData.pos, pos);
     collisionData.radius = radius;
     collisionData.offsetY = offsetY;
     numCollisions = find_wall_collisions(&collisionData);
@@ -3607,14 +3604,12 @@ s32 collide_with_walls(Vec3f pos, f32 offsetY, f32 radius) {
         for (i = 0; i < collisionData.numWalls; i++) {
             wall = collisionData.walls[collisionData.numWalls - 1];
             vec3f_copy(newPos[i], pos);
-            normX = wall->normal.x;
-            normY = wall->normal.y;
-            normZ = wall->normal.z;
+            vec3f_copy(norm, wall->normal);
             originOffset = wall->originOffset;
-            offset = normX * newPos[i][0] + normY * newPos[i][1] + normZ * newPos[i][2] + originOffset;
+            offset = vec3_dot(norm, newPos[i]) + originOffset;
             if (ABSF(offset) < radius) {
-                newPos[i][0] += normX * (radius - offset);
-                newPos[i][2] += normZ * (radius - offset);
+                newPos[i][0] += norm[0] * (radius - offset);
+                newPos[i][2] += norm[2] * (radius - offset);
                 vec3f_copy(pos, newPos[i]);
             }
         }
@@ -6071,9 +6066,9 @@ s32 rotate_camera_around_walls(UNUSED struct Camera *c, Vec3f cPos, s16 *avoidYa
 
     for (step = 0; step < 8; step++) {
         // Start at Mario, move backwards to Lakitu's position
-        colData.x = sMarioCamState->pos[0] + ((cPos[0] - sMarioCamState->pos[0]) * checkDist);
-        colData.y = sMarioCamState->pos[1] + ((cPos[1] - sMarioCamState->pos[1]) * checkDist);
-        colData.z = sMarioCamState->pos[2] + ((cPos[2] - sMarioCamState->pos[2]) * checkDist);
+        colData.pos[0] = sMarioCamState->pos[0] + ((cPos[0] - sMarioCamState->pos[0]) * checkDist);
+        colData.pos[1] = sMarioCamState->pos[1] + ((cPos[1] - sMarioCamState->pos[1]) * checkDist);
+        colData.pos[2] = sMarioCamState->pos[2] + ((cPos[2] - sMarioCamState->pos[2]) * checkDist);
         colData.radius = coarseRadius;
         // Increase the coarse check radius
         camera_approach_f32_symmetric_bool(&coarseRadius, 250.f, 30.f);
@@ -6095,9 +6090,9 @@ s32 rotate_camera_around_walls(UNUSED struct Camera *c, Vec3f cPos, s16 *avoidYa
                 }
             }
 
-            colData.x = sMarioCamState->pos[0] + ((cPos[0] - sMarioCamState->pos[0]) * checkDist);
-            colData.y = sMarioCamState->pos[1] + ((cPos[1] - sMarioCamState->pos[1]) * checkDist);
-            colData.z = sMarioCamState->pos[2] + ((cPos[2] - sMarioCamState->pos[2]) * checkDist);
+            colData.pos[0] = sMarioCamState->pos[0] + ((cPos[0] - sMarioCamState->pos[0]) * checkDist);
+            colData.pos[1] = sMarioCamState->pos[1] + ((cPos[1] - sMarioCamState->pos[1]) * checkDist);
+            colData.pos[2] = sMarioCamState->pos[2] + ((cPos[2] - sMarioCamState->pos[2]) * checkDist);
             colData.radius = fineRadius;
             // Increase the fine check radius
             camera_approach_f32_symmetric_bool(&fineRadius, 200.f, 20.f);

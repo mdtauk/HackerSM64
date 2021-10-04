@@ -973,7 +973,7 @@ static s32 cur_obj_move_xz(f32 steepSlopeNormalY, s32 careAboutEdgesAndSteepSlop
             // Don't walk off an edge
             o->oMoveFlags |= OBJ_MOVE_HIT_EDGE;
             return FALSE;
-        } else if (intendedFloor->normal.y > steepSlopeNormalY) {
+        } else if (intendedFloor->normal[1] > steepSlopeNormalY) {
             // Allow movement onto a slope, provided it's not too steep
             o->oPosX = intendedX;
             o->oPosZ = intendedZ;
@@ -983,7 +983,7 @@ static s32 cur_obj_move_xz(f32 steepSlopeNormalY, s32 careAboutEdgesAndSteepSlop
             o->oMoveFlags |= OBJ_MOVE_HIT_EDGE;
             return FALSE;
         }
-    } else if (intendedFloor->normal.y > steepSlopeNormalY || o->oPosY > intendedFloorHeight) {
+    } else if (intendedFloor->normal[1] > steepSlopeNormalY || o->oPosY > intendedFloorHeight) {
         // Allow movement upward, provided either:
         // - The target floor is flat enough (e.g. walking up stairs)
         // - We are above the target floor (most likely in the air)
@@ -1346,10 +1346,10 @@ static s32 cur_obj_detect_steep_floor(s16 steepAngleDegrees) {
         if (intendedFloorHeight < FLOOR_LOWER_LIMIT_MISC) {
             o->oWallAngle = o->oMoveAngleYaw + 0x8000;
             return TRUE;
-        } else if (intendedFloor->normal.y < coss((s16)(steepAngleDegrees * (0x10000 / 360)))
+        } else if (intendedFloor->normal[1] < coss((s16)(steepAngleDegrees * (0x10000 / 360)))
                    && deltaFloorHeight > 0
                    && intendedFloorHeight > o->oPosY) {
-            o->oWallAngle = atan2s(intendedFloor->normal.z, intendedFloor->normal.x);
+            o->oWallAngle = atan2s(intendedFloor->normal[2], intendedFloor->normal[0]);
             return TRUE;
         } else {
             return FALSE;
@@ -1365,14 +1365,10 @@ s32 cur_obj_resolve_wall_collisions(void) {
         struct WallCollisionData collisionData;
         collisionData.offsetY = 10.0f;
         collisionData.radius = radius;
-        collisionData.x = (s16) o->oPosX;
-        collisionData.y = (s16) o->oPosY;
-        collisionData.z = (s16) o->oPosZ;
+        vec3_copy(collisionData.pos, &o->oPosVec);
         s32 numCollisions = find_wall_collisions(&collisionData);
         if (numCollisions != 0) {
-            o->oPosX = collisionData.x;
-            o->oPosY = collisionData.y;
-            o->oPosZ = collisionData.z;
+            vec3_copy(&o->oPosVec, collisionData.pos);
             struct Surface *wall = collisionData.walls[collisionData.numWalls - 1];
 
             o->oWallAngle = SURFACE_YAW(wall);
@@ -2211,17 +2207,13 @@ s32 cur_obj_has_model(u16 modelID) {
 
 void cur_obj_align_gfx_with_floor(void) {
     struct Surface *floor;
-    Vec3f floorNormal;
     Vec3f position;
     vec3_copy(position, &o->oPosVec);
 
     find_floor(position[0], position[1], position[2], &floor);
     if (floor != NULL) {
-        floorNormal[0] = floor->normal.x;
-        floorNormal[1] = floor->normal.y;
-        floorNormal[2] = floor->normal.z;
 
-        mtxf_align_terrain_normal(o->transform, floorNormal, position, o->oFaceAngleYaw);
+        mtxf_align_terrain_normal(o->transform, floor->normal, position, o->oFaceAngleYaw);
         o->header.gfx.throwMatrix = &o->transform;
     }
 }

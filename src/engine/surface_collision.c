@@ -37,7 +37,8 @@ static s32 find_wall_collisions_from_list(struct SurfaceNode *surfaceNode, struc
     register struct Surface *surf;
     register f32 offset;
     register f32 radius = data->radius;
-    register Vec3f pos = { data->x, data->y + data->offsetY, data->z };
+    register Vec3f pos;
+    vec3_copy_y_off(pos, data->pos, data->offsetY);
     register Vec3f v0, v1, v2;
     register f32 d00, d01, d11, d20, d21;
     register f32 invDenom;
@@ -72,7 +73,7 @@ static s32 find_wall_collisions_from_list(struct SurfaceNode *surfaceNode, struc
         }
         if ((pos[1] < surf->lowerY) || (pos[1] > surf->upperY)) continue;
         // Dot of normal and pos, + origin offset
-        offset = ((surf->normal.x * pos[0]) + (surf->normal.y * pos[1]) + (surf->normal.z * pos[2]) + surf->originOffset);
+        offset = vec3_dot(surf->normal, pos) + surf->originOffset;
         if ((offset < -radius) || (offset > radius)) continue;
         vec3_diff(v0, surf->vertex2, surf->vertex1);
         vec3_diff(v1, surf->vertex3, surf->vertex1);
@@ -88,8 +89,8 @@ static s32 find_wall_collisions_from_list(struct SurfaceNode *surfaceNode, struc
         if ((v < 0.0f) || (v > 1.0f)) goto edge_1_2;
         w = (((d00 * d21) - (d01 * d20)) * invDenom);
         if ((w < 0.0f) || (w > 1.0f) || ((v + w) > 1.0f)) goto edge_1_2;
-        pos[0] += (surf->normal.x * (radius - offset));
-        pos[2] += (surf->normal.z * (radius - offset));
+        pos[0] += (surf->normal[0] * (radius - offset));
+        pos[2] += (surf->normal[2] * (radius - offset));
         goto hasCollision;
     edge_1_2:
         if (offset < 0) continue;
@@ -105,15 +106,15 @@ static s32 find_wall_collisions_from_list(struct SurfaceNode *surfaceNode, struc
         pos[0] += (d00 *= invDenom);
         pos[2] += (d01 *= invDenom);
         margin_radius += 0.01f;
-        if (((d00 * surf->normal.x) + (d01 * surf->normal.z)) < (corner_threshold * offset)) continue;
+        if (((d00 * surf->normal[0]) + (d01 * surf->normal[2])) < (corner_threshold * offset)) continue;
     hasCollision:
         if (data->numWalls < MAX_REFEREMCED_WALLS) {
             data->walls[data->numWalls++] = surf;
         }
         numCols++;
     }
-    data->x = pos[0];
-    data->z = pos[2];
+    data->pos[0] = pos[0];
+    data->pos[2] = pos[2];
     return numCols;
 }
 
@@ -125,14 +126,14 @@ s32 f32_find_wall_collision(f32 *xPtr, f32 *yPtr, f32 *zPtr, f32 offsetY, f32 ra
     s32 numCollisions  = 0;
     collision.offsetY  = offsetY;
     collision.radius   = radius;
-    collision.x        = *xPtr;
-    collision.y        = *yPtr;
-    collision.z        = *zPtr;
+    collision.pos[0]        = *xPtr;
+    collision.pos[1]        = *yPtr;
+    collision.pos[2]        = *zPtr;
     collision.numWalls = 0;
     numCollisions      = find_wall_collisions(&collision);
-    *xPtr              = collision.x;
-    *yPtr              = collision.y;
-    *zPtr              = collision.z;
+    *xPtr              = collision.pos[0];
+    *yPtr              = collision.pos[1];
+    *zPtr              = collision.pos[2];
     return numCollisions;
 }
 
@@ -143,8 +144,8 @@ s32 find_wall_collisions(struct WallCollisionData *colData) {
     struct SurfaceNode *node;
     s32 cellX, cellZ;
     s32 numCollisions = 0;
-    s32 x = colData->x;
-    s32 z = colData->z;
+    s32 x = colData->pos[0];
+    s32 z = colData->pos[2];
 #if PUPPYPRINT_DEBUG
     OSTime first = osGetTime();
 #endif
@@ -176,23 +177,19 @@ s32 find_wall_collisions(struct WallCollisionData *colData) {
  * Collides with walls and returns the most recent wall.
  */
 void resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 radius, struct WallCollisionData *collisionData) {
-    collisionData->x = pos[0];
-    collisionData->y = pos[1];
-    collisionData->z = pos[2];
+    vec3f_copy(collisionData->pos, pos);
     collisionData->radius = radius;
     collisionData->offsetY = offset;
     find_wall_collisions(collisionData);
-    pos[0] = collisionData->x;
-    pos[1] = collisionData->y;
-    pos[2] = collisionData->z;
+    vec3f_copy(pos, collisionData->pos);
 }
 
 s32 find_all_collisions(struct WallCollisionData *colData) {
     struct SurfaceNode *node;
     s32 cellX, cellZ;
     s32 numCollisions = 0;
-    s32 x = colData->x;
-    s32 z = colData->z;
+    s32 x = colData->pos[0];
+    s32 z = colData->pos[2];
 #if PUPPYPRINT_DEBUG
     OSTime first = osGetTime();
 #endif
@@ -240,15 +237,11 @@ s32 find_all_collisions(struct WallCollisionData *colData) {
  * Collides with walls and returns the most recent wall.
  */
 void resolve_and_return_all_collisions(Vec3f pos, f32 offset, f32 radius, struct WallCollisionData *collisionData) {
-    collisionData->x = pos[0];
-    collisionData->y = pos[1];
-    collisionData->z = pos[2];
+    vec3f_copy(collisionData->pos, pos);
     collisionData->radius = radius;
     collisionData->offsetY = offset;
     find_all_collisions(collisionData);
-    pos[0] = collisionData->x;
-    pos[1] = collisionData->y;
-    pos[2] = collisionData->z;
+    vec3f_copy(pos, collisionData->pos);
 }
 
 /**************************************************
@@ -869,9 +862,9 @@ s32 unused_resolve_floor_or_ceil_collisions(s32 checkCeil, f32 *px, f32 *py, f32
         return -1;
     }
 
-    nx = (*psurface)->normal.x;
-    ny = (*psurface)->normal.y;
-    nz = (*psurface)->normal.z;
+    nx = (*psurface)->normal[0];
+    ny = (*psurface)->normal[1];
+    nz = (*psurface)->normal[2];
     oo = (*psurface)->originOffset;
 
     offset = (nx * x) + (ny * y) + (nz * z) + oo;

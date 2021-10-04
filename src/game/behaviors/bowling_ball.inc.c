@@ -224,9 +224,9 @@ void bhv_bob_pit_bowling_ball_loop(void) {
     object_step();
 
     find_floor(o->oPosX, o->oPosY, o->oPosZ, &floor);
-    if ((floor->normal.x == 0) && (floor->normal.z == 0))
+    if ((floor->normal[0] == 0) && (floor->normal[2] == 0)) {
         o->oForwardVel = 28.0f;
-
+    }
     bowling_ball_set_hitbox();
     set_camera_shake_from_point(SHAKE_POS_BOWLING_BALL, o->oPosX, o->oPosY, o->oPosZ);
     cur_obj_play_sound_1(SOUND_ENV_UNKNOWN2);

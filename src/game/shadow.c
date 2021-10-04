@@ -23,17 +23,13 @@
  */
 struct Shadow {
     /* The (x, y, z) position of the object whose shadow this is. */
-    f32 parentX;
-    f32 parentY;
-    f32 parentZ;
+    Vec3f parent;
     /* The y-position of the floor (or water or lava) underneath the object. */
     f32 floorHeight;
     /* Initial (unmodified) size of the shadow. */
     f32 shadowScale;
     /* (nx, ny, nz) normal vector of the floor underneath the object. */
-    f32 floorNormalX;
-    f32 floorNormalY;
-    f32 floorNormalZ;
+    Vec3f floorNormal;
     /* "originOffset" of the floor underneath the object. */
     f32 floorOriginOffset;
     /* Angle describing "which way a marble would roll," in degrees. */
@@ -178,10 +174,10 @@ s32 dim_shadow_with_distance(u8 solidity, f32 distFromFloor) {
  * -10,000.
  */
 f32 get_water_level_below_shadow(struct Shadow *s, struct Surface **waterFloor) {
-    f32 waterLevel = find_water_level_and_floor(s->parentX, s->parentZ, waterFloor);
+    f32 waterLevel = find_water_level_and_floor(s->parent[0], s->parent[2], waterFloor);
     if (waterLevel < FLOOR_LOWER_LIMIT_SHADOW) {
         return 0;
-    } else if (s->parentY >= waterLevel && s->floorHeight <= waterLevel) {
+    } else if (s->parent[1] >= waterLevel && s->floorHeight <= waterLevel) {
         gShadowFlags |= SHADOW_FLAG_WATER_BOX;
         return waterLevel;
     }
@@ -200,11 +196,11 @@ s32 init_shadow(struct Shadow *s, f32 xPos, f32 yPos, f32 zPos, s16 shadowScale,
     struct Surface *floor;
     struct Surface *waterFloor = NULL;
 
-    s->parentX = xPos;
-    s->parentY = yPos;
-    s->parentZ = zPos;
+    s->parent[0] = xPos;
+    s->parent[1] = yPos;
+    s->parent[2] = zPos;
 
-    s->floorHeight = find_floor(s->parentX, s->parentY, s->parentZ, &floor);
+    s->floorHeight = find_floor(s->parent[0], s->parent[1], s->parent[2], &floor);
 
     f32 waterLevel = get_water_level_below_shadow(s, &waterFloor);
 
@@ -216,9 +212,7 @@ s32 init_shadow(struct Shadow *s, f32 xPos, f32 yPos, f32 zPos, s16 shadowScale,
         s->floorHeight = waterLevel;
 
         if (waterFloor != NULL) {
-            s->floorNormalX = waterFloor->normal.x;
-            s->floorNormalY = waterFloor->normal.y;
-            s->floorNormalZ = waterFloor->normal.z;
+            vec3f_copy(s->floorNormal, waterFloor->normal);
             s->floorOriginOffset = waterFloor->originOffset;
             gShadowFlags &= ~SHADOW_FLAG_WATER_BOX;
             gShadowFlags |= SHADOW_FLAG_WATER_SURFACE;
@@ -226,22 +220,18 @@ s32 init_shadow(struct Shadow *s, f32 xPos, f32 yPos, f32 zPos, s16 shadowScale,
         } else {
             gShadowFlags &= ~SHADOW_FLAG_WATER_SURFACE;
             // Assume that the water is flat.
-            s->floorNormalX = 0.0f;
-            s->floorNormalY = 1.0f;
-            s->floorNormalZ = 0.0f;
+            vec3f_copy(s->floorNormal, gVec3fY);
             s->floorOriginOffset = -waterLevel;
         }
 
     } else {
         // Don't draw a shadow if the floor is lower than expected possible,
         // or if the y-normal is negative (an unexpected result).
-        if (s->floorHeight < FLOOR_LOWER_LIMIT_SHADOW || floor->normal.y <= 0.0f) {
+        if (s->floorHeight < FLOOR_LOWER_LIMIT_SHADOW || floor->normal[1] <= 0.0f) {
             return TRUE;
         }
 
-        s->floorNormalX = floor->normal.x;
-        s->floorNormalY = floor->normal.y;
-        s->floorNormalZ = floor->normal.z;
+        vec3f_copy(s->floorNormal, floor->normal);
         s->floorOriginOffset = floor->originOffset;
     }
 
@@ -251,16 +241,16 @@ s32 init_shadow(struct Shadow *s, f32 xPos, f32 yPos, f32 zPos, s16 shadowScale,
 
     s->shadowScale = scale_shadow_with_distance(shadowScale, yPos - s->floorHeight);
 
-    s->floorDownwardAngle = atan2_deg(s->floorNormalZ, s->floorNormalX);
+    s->floorDownwardAngle = atan2_deg(s->floorNormal[2], s->floorNormal[0]);
 
-    f32 floorSteepness = (sqr(s->floorNormalX) + sqr(s->floorNormalZ));
+    f32 floorSteepness = (sqr(s->floorNormal[0]) + sqr(s->floorNormal[2]));
 
     // This if-statement avoids dividing by 0.
     if (floorSteepness == 0.0f) {
         s->floorTilt = 0;
     } else {
         floorSteepness = sqrtf(floorSteepness);
-        s->floorTilt = 90.0f - atan2_deg(floorSteepness, s->floorNormalY);
+        s->floorTilt = 90.0f - atan2_deg(floorSteepness, s->floorNormal[1]);
     }
     return FALSE;
 }
@@ -337,7 +327,7 @@ void make_shadow_vertex_at_xyz(Vtx *vertices, s8 index, f32 relX, f32 relY, f32 
  * according to the floor's normal vector.
  */
 f32 extrapolate_vertex_y_position(struct Shadow s, f32 vtxX, f32 vtxZ) {
-    return -(s.floorNormalX * vtxX + s.floorNormalZ * vtxZ + s.floorOriginOffset) / s.floorNormalY;
+    return -(s.floorNormal[0] * vtxX + s.floorNormal[2] * vtxZ + s.floorOriginOffset) / s.floorNormal[1];
 }
 
 /**
@@ -380,8 +370,8 @@ void calculate_vertex_xyz(s8 index, struct Shadow s, f32 *xPosVtx, f32 *yPosVtx,
     f32 halfScale       = (xCoordUnit * s.shadowScale) / 2.0f;
     f32 halfTiltedScale = (zCoordUnit *   tiltedScale) / 2.0f;
 
-    *xPosVtx = (halfTiltedScale * sinf(downwardAngle)) + (halfScale * cosf(downwardAngle)) + s.parentX;
-    *zPosVtx = (halfTiltedScale * cosf(downwardAngle)) - (halfScale * sinf(downwardAngle)) + s.parentZ;
+    *xPosVtx = (halfTiltedScale * sinf(downwardAngle)) + (halfScale * cosf(downwardAngle)) + s.parent[0];
+    *zPosVtx = (halfTiltedScale * cosf(downwardAngle)) - (halfScale * sinf(downwardAngle)) + s.parent[2];
 
     if (gShadowFlags & SHADOW_FLAG_WATER_BOX) {
         *yPosVtx = s.floorHeight;
@@ -395,7 +385,7 @@ void calculate_vertex_xyz(s8 index, struct Shadow s, f32 *xPosVtx, f32 *yPosVtx,
                 // Clamp this vertex's y-position to that of the floor directly
                 // below it, which may differ from the floor below the center
                 // vertex.
-                *yPosVtx = find_floor_height(*xPosVtx, s.parentY, *zPosVtx);
+                *yPosVtx = find_floor_height(*xPosVtx, s.parent[1], *zPosVtx);
                 break;
             case SHADOW_WITH_4_VERTS:
                 // Do not clamp. Instead, extrapolate the y-position of this
@@ -418,26 +408,25 @@ void calculate_vertex_xyz(s8 index, struct Shadow s, f32 *xPosVtx, f32 *yPosVtx,
  * the y-value from `find_floor`. (See the bottom of `calculate_vertex_xyz`.)
  */
 s16 floor_local_tilt(struct Shadow s, f32 vtxX, f32 vtxY, f32 vtxZ) {
-    f32 relX = vtxX - s.parentX;
-    f32 relY = vtxY - s.floorHeight;
-    f32 relZ = vtxZ - s.parentZ;
-
-    return ((relX * s.floorNormalX) + (relY * s.floorNormalY) + (relZ * s.floorNormalZ));
+    Vec3f rel;
+    rel[0] = (vtxX - s.parent[0]);
+    rel[1] = (vtxY - s.floorHeight);
+    rel[2] = (vtxZ - s.parent[2]);
+    return vec3_dot(rel, s.floorNormal);
 }
 
 /**
  * Make a particular vertex from a shadow, calculating its position and solidity.
  */
 void make_shadow_vertex(Vtx *vertices, s8 index, struct Shadow s, s8 shadowVertexType) {
-    f32 xPosVtx, yPosVtx, zPosVtx;
-    f32 relX, relY, relZ;
+    Vec3f posVtx, rel;
 
     u8 solidity = s.solidity;
     if (gShadowFlags & SHADOW_FLAG_WATER_BOX) {
         solidity = 200;
     }
 
-    calculate_vertex_xyz(index, s, &xPosVtx, &yPosVtx, &zPosVtx, shadowVertexType);
+    calculate_vertex_xyz(index, s, &posVtx[0], &posVtx[1], &posVtx[2], shadowVertexType);
 
     /**
      * This is the hack that makes "SHADOW_WITH_9_VERTS" act identically to
@@ -453,15 +442,13 @@ void make_shadow_vertex(Vtx *vertices, s8 index, struct Shadow s, s8 shadowVerte
      * The gShadowAboveWaterOrLava check is redundant, since `floor_local_tilt`
      * will always be 0 over water or lava (since they are always flat).
      */
-    if (shadowVertexType == SHADOW_WITH_9_VERTS && !(gShadowFlags & SHADOW_FLAG_WATER_BOX) && floor_local_tilt(s, xPosVtx, yPosVtx, zPosVtx) != 0) {
-        yPosVtx = extrapolate_vertex_y_position(s, xPosVtx, zPosVtx);
+    if (shadowVertexType == SHADOW_WITH_9_VERTS && !(gShadowFlags & SHADOW_FLAG_WATER_BOX) && floor_local_tilt(s, posVtx[0], posVtx[1], posVtx[2]) != 0) {
+        posVtx[1] = extrapolate_vertex_y_position(s, posVtx[0], posVtx[2]);
         solidity = 0;
     }
-    relX = xPosVtx - s.parentX;
-    relY = yPosVtx - s.parentY;
-    relZ = zPosVtx - s.parentZ;
+    vec3_diff(rel, posVtx, s.parent);
 
-    make_shadow_vertex_at_xyz(vertices, index, relX, relY, relZ, solidity, shadowVertexType);
+    make_shadow_vertex_at_xyz(vertices, index, rel[0], rel[1], rel[2], solidity, shadowVertexType);
 }
 
 /**
