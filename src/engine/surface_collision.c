@@ -148,35 +148,27 @@ s32 find_wall_collisions(struct WallCollisionData *colData) {
 #if PUPPYPRINT_DEBUG
     OSTime first = osGetTime();
 #endif
-
     colData->numWalls = 0;
-
     if (is_outside_level_bounds(x, z)) {
 #if PUPPYPRINT_DEBUG
-        collisionTime[perfIteration] += osGetTime() - first;
+        collisionTime[perfIteration] += (osGetTime() - first);
 #endif
         return numCollisions;
     }
-
     // World (level) consists of a 16x16 grid. Find where the collision is on the grid (round toward -inf)
     cellX = GET_CELL_COORD(x);
     cellZ = GET_CELL_COORD(z);
-
     // Check for surfaces belonging to objects.
     node = gDynamicSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_WALLS].next;
     numCollisions += find_wall_collisions_from_list(node, colData);
-
     // Check for surfaces that are a part of level geometry.
     node = gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_WALLS].next;
     numCollisions += find_wall_collisions_from_list(node, colData);
-
     // Increment the debug tracker.
     gNumCalls.wall++;
-
 #if PUPPYPRINT_DEBUG
     collisionTime[perfIteration] += (osGetTime() - first);
 #endif
-
     return numCollisions;
 }
 
@@ -189,9 +181,71 @@ void resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 radius, struc
     collisionData->z = pos[2];
     collisionData->radius = radius;
     collisionData->offsetY = offset;
-
     find_wall_collisions(collisionData);
+    pos[0] = collisionData->x;
+    pos[1] = collisionData->y;
+    pos[2] = collisionData->z;
+}
 
+s32 find_all_collisions(struct WallCollisionData *colData) {
+    struct SurfaceNode *node;
+    s32 cellX, cellZ;
+    s32 numCollisions = 0;
+    s32 x = colData->x;
+    s32 z = colData->z;
+#if PUPPYPRINT_DEBUG
+    OSTime first = osGetTime();
+#endif
+    colData->numWalls = 0;
+    if (is_outside_level_bounds(x, z)) {
+#if PUPPYPRINT_DEBUG
+        collisionTime[perfIteration] += (osGetTime() - first);
+#endif
+        return numCollisions;
+    }
+    // World (level) consists of a 16x16 grid. Find where the collision is on the grid (round toward -inf)
+    cellX = GET_CELL_COORD(x);
+    cellZ = GET_CELL_COORD(z);
+
+    // Check for surfaces belonging to objects.
+    node = gDynamicSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_WALLS].next;
+    numCollisions += find_wall_collisions_from_list(node, colData);
+    // Check for surfaces that are a part of level geometry.
+    node = gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_WALLS].next;
+    numCollisions += find_wall_collisions_from_list(node, colData);
+    
+    // Check for surfaces belonging to objects.
+    node = gDynamicSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_CEILS].next;
+    numCollisions += find_wall_collisions_from_list(node, colData);
+    // Check for surfaces that are a part of level geometry.
+    node = gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_CEILS].next;
+    numCollisions += find_wall_collisions_from_list(node, colData);
+    
+    // Check for surfaces belonging to objects.
+    node = gDynamicSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_FLOORS].next;
+    numCollisions += find_wall_collisions_from_list(node, colData);
+    // Check for surfaces that are a part of level geometry.
+    node = gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_FLOORS].next;
+    numCollisions += find_wall_collisions_from_list(node, colData);
+
+    // Increment the debug tracker.
+    gNumCalls.wall++;
+#if PUPPYPRINT_DEBUG
+    collisionTime[perfIteration] += (osGetTime() - first);
+#endif
+    return numCollisions;
+}
+
+/**
+ * Collides with walls and returns the most recent wall.
+ */
+void resolve_and_return_all_collisions(Vec3f pos, f32 offset, f32 radius, struct WallCollisionData *collisionData) {
+    collisionData->x = pos[0];
+    collisionData->y = pos[1];
+    collisionData->z = pos[2];
+    collisionData->radius = radius;
+    collisionData->offsetY = offset;
+    find_all_collisions(collisionData);
     pos[0] = collisionData->x;
     pos[1] = collisionData->y;
     pos[2] = collisionData->z;
@@ -202,10 +256,9 @@ void resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 radius, struc
  **************************************************/
 
 void add_ceil_margin(s32 *x, s32 *z, Vec3s target1, Vec3s target2, f32 margin) {
-    register f32 diff_x, diff_z, invDenom;
-    diff_x = (target1[0] - *x + target2[0] - *x);
-    diff_z = (target1[2] - *z + target2[2] - *z);
-    invDenom = (margin / sqrtf(sqr(diff_x) + sqr(diff_z)));
+    register f32 diff_x = (target1[0] - *x + target2[0] - *x);
+    register f32 diff_z = (target1[2] - *z + target2[2] - *z);
+    register f32 invDenom = (margin / sqrtf(sqr(diff_x) + sqr(diff_z)));
     *x += (diff_x * invDenom);
     *z += (diff_z * invDenom);
 }

@@ -67,54 +67,6 @@ static f32 get_buoyancy(struct MarioState *m) {
     return buoyancy;
 }
 
-static u32 perform_water_full_step(struct MarioState *m, Vec3f nextPos) {
-    struct WallCollisionData wallData;
-    struct Surface *wall;
-    struct Surface *ceil;
-    struct Surface *floor;
-    f32 ceilHeight;
-    f32 floorHeight;
-
-    resolve_and_return_wall_collisions(nextPos, 10.0f, 110.0f, &wallData);
-    wall = wallData.numWalls == 0 ? NULL : wallData.walls[0];
-    floorHeight = find_floor(nextPos[0], nextPos[1], nextPos[2], &floor);
-    ceilHeight = find_ceil(nextPos[0], nextPos[1] + 3.0f, nextPos[2], &ceil);
-
-    if (floor == NULL) {
-        return WATER_STEP_CANCELLED;
-    }
-
-    if (nextPos[1] >= floorHeight) {
-        if (ceilHeight - nextPos[1] >= 160.0f) {
-            vec3f_copy(m->pos, nextPos);
-            set_mario_floor(m, floor, floorHeight);
-
-            if (wall != NULL) {
-                return WATER_STEP_HIT_WALL;
-            } else {
-                return WATER_STEP_NONE;
-            }
-        }
-
-        if (ceilHeight - floorHeight < 160.0f) {
-            return WATER_STEP_CANCELLED;
-        }
-
-        //! Water ceiling downwarp
-        vec3f_set(m->pos, nextPos[0], ceilHeight - 160.0f, nextPos[2]);
-        set_mario_floor(m, floor, floorHeight);
-        return WATER_STEP_HIT_CEILING;
-    } else {
-        if (ceilHeight - floorHeight < 160.0f) {
-            return WATER_STEP_CANCELLED;
-        }
-
-        vec3f_set(m->pos, nextPos[0], floorHeight, nextPos[2]);
-        set_mario_floor(m, floor, floorHeight);
-        return WATER_STEP_HIT_FLOOR;
-    }
-}
-
 static void apply_water_current(struct MarioState *m, Vec3f step) {
     s32 i;
     f32 whirlpoolRadius = 2000.0f;
@@ -164,28 +116,70 @@ static void apply_water_current(struct MarioState *m, Vec3f step) {
     }
 }
 
+static u32 water_hit_wall(struct MarioState *m, Vec3f nextPos, struct Surface *wall) {
+
+}
+static u32 water_hit_ceil(struct MarioState *m, Vec3f nextPos, struct Surface *ceil) {
+
+}
+static u32 water_hit_floor(struct MarioState *m, Vec3f nextPos, struct Surface *floor) {
+
+}
+
+static u32 perform_water_full_step(struct MarioState *m, Vec3f nextPos) {
+    struct WallCollisionData wallData;
+    struct Surface *ceil, *floor;
+    resolve_and_return_wall_collisions(nextPos, 10.0f, 110.0f, &wallData);
+    struct Surface *wall = wallData.numWalls == 0 ? NULL : wallData.walls[0];
+    f32 floorHeight = find_floor(nextPos[0], nextPos[1], nextPos[2], &floor);
+    f32 ceilHeight  = find_ceil( nextPos[0], nextPos[1], nextPos[2], &ceil);
+    if (floor == NULL) return WATER_STEP_CANCELLED;
+    if (nextPos[1] >= floorHeight) {
+        if (ceilHeight - nextPos[1] >= 160.0f) {
+            vec3f_copy(m->pos, nextPos);
+            set_mario_floor(m, floor, floorHeight);
+            return ((wall != NULL) ? WATER_STEP_HIT_WALL : WATER_STEP_NONE);
+        }
+        if ((ceilHeight - floorHeight) < 160.0f) {
+            return WATER_STEP_CANCELLED;
+        }
+        //! Water ceiling downwarp
+        vec3f_set(m->pos, nextPos[0], (ceilHeight - 160.0f), nextPos[2]);
+        set_mario_floor(m, floor, floorHeight);
+        return WATER_STEP_HIT_CEILING;
+    } else {
+        if ((ceilHeight - floorHeight) < 160.0f) {
+            return WATER_STEP_CANCELLED;
+        }
+        vec3f_set(m->pos, nextPos[0], floorHeight, nextPos[2]);
+        set_mario_floor(m, floor, floorHeight);
+        return WATER_STEP_HIT_FLOOR;
+    }
+}
+
 static u32 perform_water_step(struct MarioState *m) {
-    u32 stepResult;
+    u32 stepResult = WATER_STEP_NONE;
     Vec3f nextPos;
     Vec3f step;
     struct Object *marioObj = m->marioObj;
-
     vec3f_copy(step, m->vel);
-
     if (m->action & ACT_FLAG_SWIMMING) {
         apply_water_current(m, step);
     }
-
-    nextPos[0] = m->pos[0] + step[0];
-    nextPos[1] = m->pos[1] + step[1];
-    nextPos[2] = m->pos[2] + step[2];
-
-    if (nextPos[1] > m->waterLevel - 80) {
-        nextPos[1] = m->waterLevel - 80;
-        m->vel[1] = 0.0f;
+    const f32 numSteps = WATER_NUM_STEPS;
+    s32 i;
+    for (i = 0; i < numSteps; i++) {
+        nextPos[0] = (m->pos[0] + (step[0] / numSteps));
+        nextPos[1] = (m->pos[1] + (step[1] / numSteps));
+        nextPos[2] = (m->pos[2] + (step[2] / numSteps));
+        // If Mario is at the surface, keep him there?
+        if (nextPos[1] > (m->waterLevel - 80)) {
+            nextPos[1] = (m->waterLevel - 80);
+            m->vel[1]  = 0.0f;
+        }
+        stepResult = perform_water_full_step(m, nextPos);
+        if (stepResult == WATER_STEP_CANCELLED) break;
     }
-
-    stepResult = perform_water_full_step(m, nextPos);
 
     vec3f_copy(marioObj->header.gfx.pos, m->pos);
     vec3s_set(marioObj->header.gfx.angle, -m->faceAngle[0], m->faceAngle[1], m->faceAngle[2]);
@@ -282,27 +276,12 @@ static void update_swimming_yaw(struct MarioState *m) {
 
 static void update_swimming_pitch(struct MarioState *m) {
     s16 targetPitch = -(s16)(252.0f * m->controller->stickY);
-
-    s16 pitchVel;
-    if (m->faceAngle[0] < 0) {
-        pitchVel = 0x100;
-    } else {
-        pitchVel = 0x200;
-    }
-
-    if (m->faceAngle[0] < targetPitch) {
-        if ((m->faceAngle[0] += pitchVel) > targetPitch) {
-            m->faceAngle[0] = targetPitch;
-        }
-    } else if (m->faceAngle[0] > targetPitch) {
-        if ((m->faceAngle[0] -= pitchVel) < targetPitch) {
-            m->faceAngle[0] = targetPitch;
-        }
-    }
+    s16 pitchVel    = ((m->faceAngle[0] < 0x0) ? 0x100 : 0x200);
+    approach_angle_bool(&m->faceAngle[0], targetPitch, pitchVel);
 }
 
-static void common_idle_step(struct MarioState *m, s32 animation, s32 arg) {
-    s16 *val = &m->marioBodyState->headAngle[0];
+static void common_idle_step(struct MarioState *m, s32 animation, s32 animSpeed) {
+    s16 *headAngle = &m->marioBodyState->headAngle[0];
 
     update_swimming_yaw(m);
     update_swimming_pitch(m);
@@ -311,22 +290,22 @@ static void common_idle_step(struct MarioState *m, s32 animation, s32 arg) {
     update_water_pitch(m);
 
     if (m->faceAngle[0] > 0) {
-        *val = approach_s32(*val, m->faceAngle[0] / 2, 0x80, 0x200);
+        *headAngle = approach_s32(*headAngle, m->faceAngle[0] / 2, 0x80, 0x200);
     } else {
-        *val = approach_s32(*val, 0, 0x200, 0x200);
+        *headAngle = approach_s32(*headAngle, 0, 0x200, 0x200);
     }
 
-    if (arg == 0) {
+    if (animSpeed == 0) {
         set_mario_animation(m, animation);
     } else {
-        set_mario_anim_with_accel(m, animation, arg);
+        set_mario_anim_with_accel(m, animation, animSpeed);
     }
 
     set_swimming_at_surface_particles(m, PARTICLE_IDLE_WATER_WAVE);
 }
 
 static s32 act_water_idle(struct MarioState *m) {
-    u32 val = 0x10000;
+    u32 animSpeed = 0x10000;
 
     if (m->flags & MARIO_METAL_CAP) {
         return set_mario_action(m, ACT_METAL_WATER_FALLING, 1);
@@ -341,10 +320,10 @@ static s32 act_water_idle(struct MarioState *m) {
     }
 
     if (m->faceAngle[0] < -0x1000) {
-        val = 0x30000;
+        animSpeed = 0x30000;
     }
 
-    common_idle_step(m, MARIO_ANIM_WATER_IDLE, val);
+    common_idle_step(m, MARIO_ANIM_WATER_IDLE, animSpeed);
     return FALSE;
 }
 
@@ -407,8 +386,7 @@ static s32 act_hold_water_action_end(struct MarioState *m) {
     }
 
     common_idle_step(
-        m, m->actionArg == 0 ? MARIO_ANIM_WATER_ACTION_END_WITH_OBJ : MARIO_ANIM_STOP_GRAB_OBJ_WATER,
-        0);
+        m, m->actionArg == 0 ? MARIO_ANIM_WATER_ACTION_END_WITH_OBJ : MARIO_ANIM_STOP_GRAB_OBJ_WATER, 0);
     if (is_anim_at_end(m)) {
         set_mario_action(m, ACT_HOLD_WATER_IDLE, 0);
     }
@@ -437,7 +415,6 @@ static void surface_swim_bob(struct MarioState *m) {
 
 static void common_swimming_step(struct MarioState *m, s16 swimStrength) {
     s16 floorPitch;
-    UNUSED struct Object *marioObj = m->marioObj;
 
     update_swimming_yaw(m);
     update_swimming_pitch(m);
@@ -447,7 +424,7 @@ static void common_swimming_step(struct MarioState *m, s16 swimStrength) {
         case WATER_STEP_HIT_FLOOR:
             floorPitch = -find_floor_slope(m, -0x8000);
             if (m->faceAngle[0] < floorPitch) {
-                m->faceAngle[0] = floorPitch;
+                approach_angle_bool(&m->faceAngle[0], floorPitch, 0x800);
             }
             break;
 

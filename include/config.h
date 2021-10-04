@@ -86,6 +86,12 @@
 #endif // DISABLE_EXIT_COURSE
 
 // -- MOVEMENT SETTINGS --
+// Number of ground steps per frame (Vanilla is 4)
+#define GROUND_NUM_STEPS 4
+// Number of air steps per frame (Vanilla is 4)
+#define AIR_NUM_STEPS    4
+// Number of swimming steps per frame (Vanilla is 1)
+#define WATER_NUM_STEPS  4
 // Fixes Mario's turn radius by making it dependent on forward speed.
 // Modes:
 // 0 is vanilla behavior.
