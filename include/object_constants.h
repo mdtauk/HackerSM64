@@ -180,6 +180,11 @@
     #define COIN_TYPE_YELLOW                                0x1
     #define COIN_TYPE_BLUE                                  0x2
 
+/* Bouncing Coin */
+    /* oAction */
+    #define BOUNCING_COIN_ACT_FALLING                       0x0
+    #define BOUNCING_COIN_ACT_BOUNCING                      0x1
+
 /* Hidden Blue Coin */
     /* oAction */
     #define HIDDEN_BLUE_COIN_ACT_INACTIVE                   0x0
@@ -209,7 +214,6 @@
     /* oAction */
     #define MOV_YCOIN_ACT_IDLE                              0x0
     #define MOV_YCOIN_ACT_BLINKING                          0x1
-    /* oSubAction */
 
 /* Coin Formation */
     /* oBehParams2ndByte */
