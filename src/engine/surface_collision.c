@@ -870,8 +870,8 @@ s32 ray_surface_intersect(Vec3f orig, Vec3f dir, f32 dir_length, struct Surface 
     vec3f_add(v0, norm);
     vec3f_add(v1, norm);
     vec3f_add(v2, norm);
-    vec3_copy(e1, surface->edge1);
-    vec3_copy(e2, surface->edge2);
+    vec3f_diff(e1, v1, v0);
+    vec3f_diff(e2, v2, v0);
     // TODO: What is h?
     vec3f_cross(h, dir, e2);
     // Check if we're perpendicular from the surface
