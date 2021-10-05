@@ -71,11 +71,13 @@ static s32 find_wall_collisions_from_list(struct SurfaceNode *surfaceNode, struc
         }
         if ((pos[1] < surf->lowerY) || (pos[1] > surf->upperY)) continue;
         // Dot of normal and pos, + origin offset
-        offset = vec3_dot(surf->normal, pos) + surf->originOffset;
+        offset = (vec3_dot(surf->normal, pos) + surf->originOffset);
         if ((offset < -radius) || (offset > radius)) continue;
-        vec3_diff(v0, surf->vertex2, surf->vertex1);
-        vec3_diff(v1, surf->vertex3, surf->vertex1);
-        vec3_diff(v2, pos,           surf->vertex1);
+        // vec3_diff(v0, surf->vertex2, surf->vertex1);
+        // vec3_diff(v1, surf->vertex3, surf->vertex1);
+        vec3_copy(v0, surf->edge1);
+        vec3_copy(v1, surf->edge2);
+        vec3_diff(v2, pos, surf->vertex1);
         // Face
         d00 = vec3_dot(v0, v0);
         d01 = vec3_dot(v0, v1);
@@ -369,7 +371,7 @@ f32 unused_obj_find_floor_height(struct Object *obj) {
     return find_floor(obj->oPosX, obj->oPosY, obj->oPosZ, &floor);
 }
 
-static s16 check_within_triangle_bounds(s32 x, s32 z, struct Surface *surf) {
+static s32 check_within_triangle_bounds(s32 x, s32 z, struct Surface *surf) {
     register Vec3i vx, vz;
     vx[0] = surf->vertex1[0];
     vz[0] = surf->vertex1[2];
@@ -856,38 +858,38 @@ s32 resolve_floor_or_ceil_collisions(s32 checkCeil, f32 *px, f32 *py, f32 *pz, f
 
 s32 ray_surface_intersect(Vec3f orig, Vec3f dir, f32 dir_length, struct Surface *surface, Vec3f hit_pos, f32 *length) {
     Vec3f v0, v1, v2, e1, e2, h, s, q;
-    f32 a, f, u, v;
-    Vec3f add_dir;
-    Vec3f norm;
     // Ignore certain surface types.
     if ((surface->type == SURFACE_INTANGIBLE) || (surface->flags & SURFACE_FLAG_NO_CAM_COLLISION)) return FALSE;
     // Get surface normal and some other stuff
-    vec3_set(norm, surface->normal[0], surface->normal[1], surface->normal[2]);
+    Vec3f norm;
+    vec3_copy(norm, surface->normal);
     vec3_mul_val(norm, RAY_OFFSET);
     vec3_copy(v0, surface->vertex1);
     vec3_copy(v1, surface->vertex2);
     vec3_copy(v2, surface->vertex3);
-    vec3f_add( v0, norm);
-    vec3f_add( v1, norm);
-    vec3f_add( v2, norm);
-    vec3f_diff(e1, v1, v0);
-    vec3f_diff(e2, v2, v0);
+    vec3f_add(v0, norm);
+    vec3f_add(v1, norm);
+    vec3f_add(v2, norm);
+    vec3_copy(e1, surface->edge1);
+    vec3_copy(e2, surface->edge2);
+    // TODO: What is h?
     vec3f_cross(h, dir, e2);
     // Check if we're perpendicular from the surface
-    a = vec3f_dot(e1, h);
+    f32 a = vec3f_dot(e1, h); // Angle to surface
     if ((a > -NEAR_ZERO) && (a < NEAR_ZERO)) return FALSE;
     // Check if we're making contact with the surface
-    f = (1.0f / a);
-    vec3f_diff(s, orig, v0);
-    u = (f * vec3f_dot(s, h));
+    f32 f = (1.0f / a);
+    vec3_diff(s, orig, v0);
+    f32 u = (f * vec3f_dot(s, h));
     if ((u < 0.0f) || (u > 1.0f)) return FALSE;
     vec3f_cross(q, s, e1);
-    v = (f * vec3f_dot(dir, q));
+    f32 v = (f * vec3f_dot(dir, q));
     if ((v < 0.0f) || ((u + v) > 1.0f)) return FALSE;
     // Get the length between our origin and the surface contact point
     *length = (f * vec3f_dot(e2, q));
     if ((*length <= NEAR_ZERO) || (*length > dir_length)) return FALSE;
     // Successful contact
+    Vec3f add_dir;
     vec3f_copy(add_dir, dir);
     vec3_mul_val(add_dir, *length);
     vec3_sum(hit_pos, orig, add_dir);
@@ -933,20 +935,20 @@ void find_surface_on_ray_cell(s32 cellX, s32 cellZ, Vec3f orig, Vec3f normalized
     if (cellX >= 0 && cellX <= (NUM_CELLS - 1) && cellZ >= 0 && cellZ <= (NUM_CELLS - 1)) {
         // Iterate through each surface in this partition
         if ((normalized_dir[1] > -NEAR_ONE) && (flags & RAYCAST_FIND_CEIL)) {
-            find_surface_on_ray_list(gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_CEILS].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
-            find_surface_on_ray_list(gDynamicSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_CEILS].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
+            find_surface_on_ray_list( gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_CEILS ].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
+            find_surface_on_ray_list(gDynamicSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_CEILS ].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
         }
         if ((normalized_dir[1] < NEAR_ONE) && (flags & RAYCAST_FIND_FLOOR)) {
-            find_surface_on_ray_list(gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_FLOORS].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
+            find_surface_on_ray_list( gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_FLOORS].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
             find_surface_on_ray_list(gDynamicSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_FLOORS].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
         }
         if (flags & RAYCAST_FIND_WALL) {
-            find_surface_on_ray_list(gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_WALLS].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
-            find_surface_on_ray_list(gDynamicSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_WALLS].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
+            find_surface_on_ray_list( gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_WALLS ].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
+            find_surface_on_ray_list(gDynamicSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_WALLS ].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
         }
         if (flags & RAYCAST_FIND_WATER) {
-            find_surface_on_ray_list(gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_WATER].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
-            find_surface_on_ray_list(gDynamicSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_WATER].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
+            find_surface_on_ray_list( gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_WATER ].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
+            find_surface_on_ray_list(gDynamicSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_WATER ].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
         }
     }
 }
@@ -1005,3 +1007,37 @@ void find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Ve
         }
     }
 }
+
+struct Surface *triangle(Vec3f v1, Vec3f v2, Vec3f v3) {
+    Vec3f d;
+    vec3_diff(d, v2, v1);
+    const f32 dd12 = vec3_sumsq(d);
+    vec3_diff(d, v3, v2);
+    const f32 dd23 = vec3_sumsq(d);
+    vec3_diff(d, v1, v3);
+    const f32 dd31 = vec3_sumsq(d);
+    struct Surface *result;
+
+    if (dd12 >= dd23 && dd12 >= dd31) {
+        vec3_copy(result->vertex1, v1);
+        vec3_copy(result->vertex2, v2);
+        vec3_copy(result->vertex3, v3);
+    } else if (dd23 >= dd12 && dd23 >= dd31) {
+        vec3_copy(result->vertex1, v2);
+        vec3_copy(result->vertex2, v3);
+        vec3_copy(result->vertex3, v1);
+    } else {
+        vec3_copy(result->vertex1, v3);
+        vec3_copy(result->vertex2, v1);
+        vec3_copy(result->vertex3, v2);
+    }
+
+    /* TODO: precalculate rest of Triangle result.
+             result.vertex[0] to result.vertex[1]
+             is the longest edge in the triangle;
+             use result.vertex[0..2] instead of v1/v2/v3.
+    */
+
+    return result;
+}
+
