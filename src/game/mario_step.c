@@ -26,6 +26,8 @@ struct Surface gWaterSurfacePseudoFloor = {
     { 0.0f, 1.0f, 0.0f },
     0.0f,
     NULL,
+    0.0f,
+    0x4000,
     0x0,
 };
 

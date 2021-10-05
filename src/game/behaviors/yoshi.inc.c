@@ -40,10 +40,8 @@ void yoshi_walk_loop(void) {
 }
 
 void yoshi_idle_loop(void) {
-    s16 chosenHome;
-
     if (o->oTimer > 90) {
-        chosenHome = random_float() * 3.99f;
+        s16 chosenHome = random_float() * 3.99f;
 
         if (o->oYoshiChosenHome == chosenHome) {
             return;
@@ -51,9 +49,9 @@ void yoshi_idle_loop(void) {
             o->oYoshiChosenHome = chosenHome;
         }
 
-        o->oHomeX = sYoshiHomeLocations[o->oYoshiChosenHome * 2];
-        o->oHomeZ = sYoshiHomeLocations[o->oYoshiChosenHome * 2 + 1];
-        o->oYoshiTargetYaw = atan2s(o->oHomeZ - o->oPosZ, o->oHomeX - o->oPosX);
+        o->oHomeX = sYoshiHomeLocations[(o->oYoshiChosenHome * 2) + 0];
+        o->oHomeZ = sYoshiHomeLocations[(o->oYoshiChosenHome * 2) + 1];
+        o->oYoshiTargetYaw = atan2s((o->oHomeZ - o->oPosZ), (o->oHomeX - o->oPosX));
         o->oAction = YOSHI_ACT_WALK;
     }
 
@@ -66,7 +64,7 @@ void yoshi_idle_loop(void) {
         gPlayerCameraState->cameraEvent == CAM_EVENT_START_END_WAVING) {
         o->oAction = YOSHI_ACT_CREDITS;
         o->oPosX = -1798.0f;
-        o->oPosY = 3174.0f;
+        o->oPosY =  3174.0f;
         o->oPosZ = -3644.0f;
     }
 }

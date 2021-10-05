@@ -67,20 +67,15 @@ void butterfly_act_follow_mario(void) {
 }
 
 void butterfly_act_return_home(void) {
-    f32 homeDistX = o->oHomeX - o->oPosX;
-    f32 homeDistY = o->oHomeY - o->oPosY;
-    f32 homeDistZ = o->oHomeZ - o->oPosZ;
-    s16 hAngleToHome = atan2s(homeDistZ, homeDistX);
-    s16 vAngleToHome = atan2s(sqrtf(homeDistX * homeDistX + homeDistZ * homeDistZ), -homeDistY);
-
-    o->oMoveAngleYaw = approach_s16_symmetric(o->oMoveAngleYaw, hAngleToHome, 0x800);
-    o->oMoveAnglePitch = approach_s16_symmetric(o->oMoveAnglePitch, vAngleToHome, 0x50);
-
+    Vec3f homeDist;
+    vec3_diff(homeDist, &o->oHomeVec, &o->oPosVec);
+    s16 hAngleToHome = atan2s(homeDist[2], homeDist[0]);
+    s16 vAngleToHome = atan2s(sqrtf(sqr(homeDist[0]) + sqr(homeDist[2])), -homeDist[1]);
+    o->oMoveAngleYaw   = approach_s16_symmetric(o->oMoveAngleYaw,   hAngleToHome, 0x800);
+    o->oMoveAnglePitch = approach_s16_symmetric(o->oMoveAnglePitch, vAngleToHome,  0x50);
     butterfly_step(7);
-
-    if (homeDistX * homeDistX + homeDistY * homeDistY + homeDistZ * homeDistZ < 144.0f) {
-        cur_obj_init_animation(1);
-
+    if (vec3_sumsq(homeDist) < 144.0f) {
+        cur_obj_init_animation(BUTTERFLY_ANIM_RESTING);
         o->oAction = BUTTERFLY_ACT_RESTING;
         vec3_copy(&o->oPosVec, &o->oHomeVec);
     }
