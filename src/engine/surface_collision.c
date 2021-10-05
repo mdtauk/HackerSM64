@@ -955,7 +955,6 @@ void find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Ve
     s32 cellZ, cellX, cellPrevX, cellPrevZ;
     f32 fCellZ, fCellX;
     Vec3f normalized_dir;
-    f32 step;
     s32 i;
     const f32 invcell = (1.0f / CELL_SIZE);
 
@@ -984,11 +983,8 @@ void find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Ve
     }
 
     // Get cells we cross using DDA
-    if (ABS(dir[0]) >= ABS(dir[2])) {
-        step = ((RAY_STEPS * ABS(dir[0])) * invcell);
-    } else {
-        step = ((RAY_STEPS * ABS(dir[2])) * invcell);
-    }
+    f32 absMaxDir = ABS(MAX(dir[0], dir[2]));
+    f32 step = ((RAY_STEPS * absMaxDir) * invcell);
     f32 dx = ((dir[0] / step) * invcell);
     f32 dz = ((dir[2] / step) * invcell);
 
