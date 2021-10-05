@@ -24,11 +24,11 @@ void rolling_log_roll_log(void) {
     if (gMarioObject->platform == o) {
         rollAmount = (gMarioObject->header.gfx.pos[2] - o->oPosZ) * coss(-o->oMoveAngleYaw)
                    - (gMarioObject->header.gfx.pos[0] - o->oPosX) * sins(-o->oMoveAngleYaw);
-        if (rollAmount > 0)
+        if (rollAmount > 0) {
             o->oAngleVelPitch += 0x10;
-        else
+        } else {
             o->oAngleVelPitch -= 0x10;
-
+        }
         if (o->oAngleVelPitch > 0x200)
             o->oAngleVelPitch = 0x200;
 
@@ -37,21 +37,21 @@ void rolling_log_roll_log(void) {
     } else {
         if (is_point_close_to_object(o, o->oHomeX, o->oHomeY, o->oHomeZ, 100)) {
             if (o->oAngleVelPitch != 0) {
-                if (o->oAngleVelPitch > 0)
+                if (o->oAngleVelPitch > 0) {
                     o->oAngleVelPitch -= 0x10;
-                else
+                } else {
                     o->oAngleVelPitch += 0x10;
-
+                }
                 if (o->oAngleVelPitch < 0x10 && o->oAngleVelPitch > -0x10)
                     o->oAngleVelPitch = 0;
             }
         } else {
             if (o->oAngleVelPitch != 0x100) {
-                if (o->oAngleVelPitch > 0x100)
+                if (o->oAngleVelPitch > 0x100) {
                     o->oAngleVelPitch -= 0x10;
-                else
+                } else {
                     o->oAngleVelPitch += 0x10;
-
+                }
                 if (o->oAngleVelPitch < 0x110 && o->oAngleVelPitch > 0xF0)
                     o->oAngleVelPitch = 0x100;
             }

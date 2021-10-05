@@ -88,10 +88,11 @@ void heave_ho_move(void) {
     cur_obj_update_floor_and_walls();
     cur_obj_call_action_function(sHeaveHoActions);
     cur_obj_move_standard(-78);
-    if (o->oMoveFlags & OBJ_MOVE_MASK_IN_WATER)
+    if (o->oMoveFlags & OBJ_MOVE_MASK_IN_WATER) {
         o->oGraphYOffset = -15.0f;
-    else
+    } else {
         o->oGraphYOffset = 0.0f;
+    }
     if (o->oForwardVel > 3.0f)
         cur_obj_play_sound_1(SOUND_AIR_HEAVEHO_MOVE);
     if (o->oAction != 0 && o->oMoveFlags & OBJ_MOVE_MASK_IN_WATER)

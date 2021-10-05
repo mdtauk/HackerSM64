@@ -160,10 +160,11 @@ void stationary_bobomb_free_loop(void) {
 }
 
 void bobomb_free_loop(void) {
-    if (o->oBehParams2ndByte == BOBOMB_BP_STYPE_GENERIC)
+    if (o->oBehParams2ndByte == BOBOMB_BP_STYPE_GENERIC) {
         generic_bobomb_free_loop();
-    else
+    } else {
         stationary_bobomb_free_loop();
+    }
 }
 
 void bobomb_held_loop(void) {
@@ -247,13 +248,12 @@ void bhv_bobomb_loop(void) {
         curr_obj_random_blink(&o->oBobombBlinkTimer);
 
         if (o->oBobombFuseLit == 1) {
-            if (o->oBobombFuseTimer >= 121)
+            if (o->oBobombFuseTimer >= 121) {
                 dustPeriodMinus1 = 1;
-            else
+            } else {
                 dustPeriodMinus1 = 7;
-
-            if ((dustPeriodMinus1 & o->oBobombFuseTimer)
-                == 0) /* oBobombFuseTimer % 2 or oBobombFuseTimer % 8 */
+            }
+            if ((dustPeriodMinus1 & o->oBobombFuseTimer) == 0) /* oBobombFuseTimer % 2 or oBobombFuseTimer % 8 */
                 spawn_object(o, MODEL_SMOKE, bhvBobombFuseSmoke);
 
             cur_obj_play_sound_1(SOUND_AIR_BOBOMB_LIT_FUSE);
@@ -314,10 +314,11 @@ void bobomb_buddy_cannon_dialog(s16 dialogFirstText, s16 dialogSecondText) {
             if (buddyText != 0) {
                 save_file_set_cannon_unlocked();
                 cannonClosed = cur_obj_nearest_object_with_behavior(bhvCannonClosed);
-                if (cannonClosed != 0)
+                if (cannonClosed != 0) {
                     o->oBobombBuddyCannonStatus = BOBOMB_BUDDY_CANNON_OPENING;
-                else
+                } else {
                     o->oBobombBuddyCannonStatus = BOBOMB_BUDDY_CANNON_STOP_TALKING;
+                }
             }
             break;
 

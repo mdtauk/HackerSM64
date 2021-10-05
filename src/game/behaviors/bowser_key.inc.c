@@ -26,14 +26,15 @@ void bhv_bowser_key_loop(void) {
         spawn_object(o, MODEL_NONE, bhvSparkleSpawn);
         cur_obj_update_floor_and_walls();
         cur_obj_move_standard(78);
-        if (o->oMoveFlags & OBJ_MOVE_ON_GROUND)
+        if (o->oMoveFlags & OBJ_MOVE_ON_GROUND) {
             o->oAction++;
-        else if (o->oMoveFlags & OBJ_MOVE_LANDED)
+        } else if (o->oMoveFlags & OBJ_MOVE_LANDED) {
 #ifndef VERSION_JP
             cur_obj_play_sound_2(SOUND_GENERAL_UNKNOWN3_2);
 #else
             cur_obj_play_sound_2(SOUND_GENERAL_UNKNOWN3_LOWPRIO);
 #endif
+        }
     } else {
         obj_set_hitbox(o, &sBowserKeyHitbox);
         if (o->oInteractStatus & INT_STATUS_INTERACTED) {

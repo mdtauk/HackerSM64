@@ -27,13 +27,14 @@ void bullet_bill_act_1(void) {
 }
 
 void bullet_bill_act_2(void) {
-    if (o->oTimer < 40)
+    if (o->oTimer < 40) {
         o->oForwardVel = 3.0f;
-    else if (o->oTimer < 50) {
-        if (o->oTimer % 2)
-            o->oForwardVel = 3.0f;
-        else
+    } else if (o->oTimer < 50) {
+        if (o->oTimer % 2) {
+            o->oForwardVel =  3.0f;
+        } else {
             o->oForwardVel = -3.0f;
+        }
     } else {
         if (o->oTimer > 70)
             cur_obj_update_floor_and_walls();

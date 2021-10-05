@@ -556,8 +556,7 @@ void bowser_act_teleport(void) {
             // reduce timer and set velocity teleport while at it
             if (o->oBowserTimer--) {
                 o->oForwardVel = 100.0f;
-            }
-            else {
+            } else {
                 o->oSubAction = BOWSER_SUB_ACT_TELEPORT_STOP;
                 o->oMoveAngleYaw = o->oAngleToMario; // update angle
             }
@@ -1269,9 +1268,9 @@ s32 bowser_dead_final_stage_ending(void) {
             o->oBowserTimer++;
         }
     // Slowly fade him out
-    } else if (o->oOpacity > 4)
+    } else if (o->oOpacity > 4) {
         o->oOpacity -= 4;
-    else {
+    } else {
         // And at last, hide him
         bowser_dead_hide();
         ret = TRUE;

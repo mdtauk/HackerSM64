@@ -20,11 +20,11 @@ void bhv_checkerboard_elevator_group_init(void) {
     relativePosY = o->oBehParams2ndByte * 10;
     type = (o->oBehParams >> 24) & 0XFF;
     for (i = 0; i < 2; i++) {
-        if (i == 0)
+        if (i == 0) {
             relativePosZ = -sCheckerBoardPlatformInitPositions[type].relPosZ;
-        else
+        } else {
             relativePosZ = sCheckerBoardPlatformInitPositions[type].relPosZ;
-
+        }
         platformObj = spawn_object_relative(i, 0, i * relativePosY, relativePosZ, o, MODEL_CHECKERBOARD_PLATFORM,
                                      bhvCheckerboardPlatformSub);
         platformObj->oCheckerBoardPlatformRadius = sCheckerBoardPlatformInitPositions[type].radius;

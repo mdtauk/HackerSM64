@@ -31,9 +31,9 @@ void bhv_red_coin_init(void) {
 
     // Set the red coins to have a parent of the closest red coin star.
     hiddenRedCoinStar = cur_obj_nearest_object_with_behavior(bhvHiddenRedCoinStar);
-    if (hiddenRedCoinStar != NULL)
+    if (hiddenRedCoinStar != NULL) {
         o->parentObj = hiddenRedCoinStar;
-    else {
+    } else {
         hiddenRedCoinStar = cur_obj_nearest_object_with_behavior(bhvBowserCourseRedCoinStar);
         if (hiddenRedCoinStar != NULL) {
             o->parentObj = hiddenRedCoinStar;

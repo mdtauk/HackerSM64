@@ -139,9 +139,9 @@ void king_whomp_on_ground(void) {
             o->oHealth--;
             cur_obj_play_sound_2(SOUND_OBJ2_WHOMP_SOUND_SHORT);
             cur_obj_play_sound_2(SOUND_OBJ_KING_WHOMP_DEATH);
-            if (o->oHealth == 0)
+            if (o->oHealth == 0) {
                 o->oAction = 8;
-            else {
+            } else {
                 vec3f_copy(pos, &o->oPosVec);
                 vec3f_copy(&o->oPosVec, &gMarioObject->oPosVec);
                 spawn_mist_particles_variable(0, 0, 100.0f);

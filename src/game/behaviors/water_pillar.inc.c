@@ -5,15 +5,16 @@ void water_level_pillar_undrained(void) {
     switch (o->oAction) {
         case 0:
             if (cur_obj_is_mario_ground_pounding_platform()) {
-                o->oAction++;
+                o->oAction = 1;
                 spawn_mist_particles();
             }
             break;
         case 1:
-            if (o->oTimer < 4)
+            if (o->oTimer < 4) {
                 o->oPosY -= 20.0f;
-            else
-                o->oAction++;
+            } else {
+                o->oAction = 2;
+            }
             break;
         case 2:
             otherWaterPillar = cur_obj_nearest_object_with_behavior(bhvWaterLevelPillar);
@@ -65,10 +66,11 @@ void bhv_water_level_pillar_init(void) {
 }
 
 void bhv_water_level_pillar_loop(void) {
-    if (o->oWaterLevelPillarDrained)
+    if (o->oWaterLevelPillarDrained) {
         water_level_pillar_drained();
-    else
+    } else {
         water_level_pillar_undrained();
+    }
     gEnvironmentRegions[18] = gEnvironmentLevels[2];
     gEnvironmentRegions[6] = gEnvironmentLevels[0];
 }

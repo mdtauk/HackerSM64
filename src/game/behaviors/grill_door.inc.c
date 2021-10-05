@@ -14,10 +14,11 @@ void bhv_openable_cage_door_loop(void) {
         if (gCurrentObject->parentObj->oOpenableGrillIsOpen != 0)
             gCurrentObject->oAction++;
     } else if (gCurrentObject->oAction == 1) {
-        if (gCurrentObject->oTimer < 64)
+        if (gCurrentObject->oTimer < 64) {
             gCurrentObject->oMoveAngleYaw -= gCurrentObject->oBehParams2ndByte * 0x100;
-        else
+        } else {
             gCurrentObject->oAction++;
+        }
     }
 }
 

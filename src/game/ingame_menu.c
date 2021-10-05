@@ -341,8 +341,7 @@ void print_generic_string(s16 x, s16 y, const u8 *str) {
     while (str[strPos] != DIALOG_CHAR_TERMINATOR) {
         if (customColor == TRUE) {
             gDPSetEnvColor(gDisplayListHead++, rgbaColors[0], rgbaColors[1], rgbaColors[2], rgbaColors[3]);
-        }
-        else {
+        } else {
             if (customColor == 2) {
                 gDPSetEnvColor(gDisplayListHead++, 255, 255, 255, 255); // TODO: Is it possible to retrieve the original color that was set before print_generic_string was called?
                 customColor = FALSE;
@@ -357,8 +356,7 @@ void print_generic_string(s16 x, s16 y, const u8 *str) {
                     diffTmp = 0;
                     if (str[strPos] >= 0x24 && str[strPos] <= 0x29) {
                         diffTmp = 0x1A;
-                    }
-                    else if (str[strPos] >= 0x10) {
+                    } else if (str[strPos] >= 0x10) {
                         customColor = 2;
                         strPos = colorLoop - 8;
                         for (diffTmp = 0; diffTmp < 8; ++diffTmp) {
@@ -371,8 +369,7 @@ void print_generic_string(s16 x, s16 y, const u8 *str) {
                     }
                     if ((8 - (colorLoop - strPos)) % 2 == 0) {
                         rgbaColors[(8 - (colorLoop - strPos)) / 2] = ((str[strPos] - diffTmp) & 0x0F) << 4;
-                    }
-                    else {
+                    } else {
                         rgbaColors[(8 - (colorLoop - strPos)) / 2] += ((str[strPos] - diffTmp) & 0x0F);
                     }
                 }
@@ -890,8 +887,7 @@ void handle_dialog_text_and_pages(s8 colorMode, struct DialogEntry *dialog, s8 l
     while (pageState == DIALOG_PAGE_STATE_NONE) {
         if (customColor == TRUE) {
             gDPSetEnvColor(gDisplayListHead++, rgbaColors[0], rgbaColors[1], rgbaColors[2], rgbaColors[3]);
-        }
-        else {
+        } else {
             change_and_flash_dialog_text_color_lines(colorMode, lineNum, &customColor);
         }
         strChar = str[strIdx];
@@ -908,8 +904,7 @@ void handle_dialog_text_and_pages(s8 colorMode, struct DialogEntry *dialog, s8 l
                     diffTmp = 0;
                     if (str[strIdx] >= 0x24 && str[strIdx] <= 0x29) {
                         diffTmp = 0x1A;
-                    }
-                    else if (str[strIdx] >= 0x10) {
+                    } else if (str[strIdx] >= 0x10) {
                         customColor = 2;
                         strIdx = colorLoop - 8;
                         for (diffTmp = 0; diffTmp < 8; ++diffTmp) {
@@ -922,8 +917,7 @@ void handle_dialog_text_and_pages(s8 colorMode, struct DialogEntry *dialog, s8 l
                     }
                     if ((8 - (colorLoop - strIdx)) % 2 == 0) {
                         rgbaColors[(8 - (colorLoop - strIdx)) / 2] = ((str[strIdx] - diffTmp) & 0x0F) << 4;
-                    }
-                    else {
+                    } else {
                         rgbaColors[(8 - (colorLoop - strIdx)) / 2] += ((str[strIdx] - diffTmp) & 0x0F);
                     }
                 }
@@ -1519,8 +1513,7 @@ void render_widescreen_setting(void) {
     if (!gConfig.widescreen) {
         print_generic_string(10, 20, textCurrRatio43);
         print_generic_string(10, 7, textPressL);
-    }
-    else {
+    } else {
         print_generic_string(10, 20, textCurrRatio169);
         print_generic_string(10, 7, textPressL);
     }
@@ -1592,8 +1585,7 @@ void render_pause_my_score_coins(void) {
         }
         print_generic_string(ACT_NAME_X, 140, actName);
         print_generic_string(LVL_NAME_X, 157, &courseName[3]);
-    }
-    else {
+    } else {
         print_generic_string(94, 157, &courseName[3]);
     }
     gSPDisplayList(gDisplayListHead++, dl_ia_text_end);

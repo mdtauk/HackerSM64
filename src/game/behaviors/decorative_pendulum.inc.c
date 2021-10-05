@@ -13,11 +13,11 @@ void bhv_decorative_pendulum_init(void) {
  * acceleration.
  */
 void bhv_decorative_pendulum_loop(void) {
-    if (o->oFaceAngleRoll > 0)
+    if (o->oFaceAngleRoll > 0) {
         o->oAngleVelRoll -= 0x08;
-    else
+    } else {
         o->oAngleVelRoll += 0x08;
-
+    }
     o->oFaceAngleRoll += o->oAngleVelRoll;
 
     /**

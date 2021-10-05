@@ -47,10 +47,11 @@ void exclamation_box_act_0(void) {
     if (o->oBehParams2ndByte < 3) {
         o->oAnimState = o->oBehParams2ndByte;
         if ((save_file_get_flags() & sCapSaveFlags[o->oBehParams2ndByte])
-            || ((o->oBehParams >> 24) & 0xFF) != 0)
+            || ((o->oBehParams >> 24) & 0xFF) != 0) {
             o->oAction = 2;
-        else
+        } else {
             o->oAction = 1;
+        }
     } else {
         o->oAnimState = 3;
         o->oAction = 2;

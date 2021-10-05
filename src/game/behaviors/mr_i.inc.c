@@ -15,9 +15,9 @@ void mr_i_piranha_particle_act_0(void) {
     cur_obj_scale(3.0f);
     o->oForwardVel = 20.0f;
     cur_obj_update_floor_and_walls();
-    if (0x8000 & o->oInteractStatus)
+    if (0x8000 & o->oInteractStatus) {
         o->oAction = 1;
-    else if ((o->oTimer >= 101) || (o->oMoveFlags & OBJ_MOVE_HIT_WALL) || o->activeFlags & ACTIVE_FLAG_IN_DIFFERENT_ROOM) {
+    } else if ((o->oTimer >= 101) || (o->oMoveFlags & OBJ_MOVE_HIT_WALL) || o->activeFlags & ACTIVE_FLAG_IN_DIFFERENT_ROOM) {
         obj_mark_for_deletion(o);
         spawn_mist_particles();
     }
@@ -56,9 +56,9 @@ void bhv_mr_i_body_loop(void) {
         o->oFaceAnglePitch = o->oMoveAnglePitch;
         o->oGraphYOffset = o->header.gfx.scale[1] * 100.f;
     }
-    if (o->parentObj->oMrIBlinking != 1)
+    if (o->parentObj->oMrIBlinking != 1) {
         o->oAnimState = -1;
-    else {
+    } else {
         o->oAnimState++;
         if (o->oAnimState == 15)
             o->parentObj->oMrIBlinking = 0;

@@ -26,16 +26,17 @@ void bhv_rotating_clock_arm_loop(void) {
                 // Set Tick Tick Clock's speed based on the angle of the hand.
                 // The angle actually counting down from 0xFFFF to 0 so
                 //   11 o'clock is a small value and 1 o'clock is a large value.
-                if (rollAngle < 0xAAA) // > 345 degrees from 12 o'clock.
+                if (rollAngle < 0xAAA) { // > 345 degrees from 12 o'clock.
                     gTTCSpeedSetting = TTC_SPEED_STOPPED;
-                else if (rollAngle < 0x6aa4) // 210..345 degrees from 12 o'clock.
+                } else if (rollAngle < 0x6aa4) { // 210..345 degrees from 12 o'clock.
                     gTTCSpeedSetting = TTC_SPEED_FAST;
-                else if (rollAngle < 0x954C) // 150..210 degrees from 12 o'clock.
+                } else if (rollAngle < 0x954C) { // 150..210 degrees from 12 o'clock.
                     gTTCSpeedSetting = TTC_SPEED_RANDOM;
-                else if (rollAngle < 0xf546) // 15..150 degrees from 12 o'clock.
+                } else if (rollAngle < 0xf546) { // 15..150 degrees from 12 o'clock.
                     gTTCSpeedSetting = TTC_SPEED_SLOW;
-                else // < 15 degrees from 12 o'clock.
+                } else { // < 15 degrees from 12 o'clock.
                     gTTCSpeedSetting = TTC_SPEED_STOPPED;
+                }
             }
 
             // Increment the action to stop animating the hands.

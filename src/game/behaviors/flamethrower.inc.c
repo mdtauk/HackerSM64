@@ -7,10 +7,11 @@ void bhv_flamethrower_flame_loop(void) {
         o->oAnimState = (s32)(random_float() * 10.0f);
         obj_translate_xyz_random(o, 10.0f);
     }
-    if (o->oBehParams2ndByte == 2)
+    if (o->oBehParams2ndByte == 2) {
         size = o->oTimer * (o->oForwardVel -  6.0f) / 100.0f + 2.0f;
-    else
+    } else {
         size = o->oTimer * (o->oForwardVel - 20.0f) / 100.0f + 1.0f;
+    }
     if (o->oBehParams2ndByte == 3) {
         o->hitboxHeight = 200.0f;
         o->hitboxDownOffset = 150.0f;
@@ -24,10 +25,11 @@ void bhv_flamethrower_flame_loop(void) {
     } else
         remainingTime = o->parentObj->oFlameThowerTimeRemaining;
     cur_obj_scale(size);
-    if (o->oBehParams2ndByte == 4)
+    if (o->oBehParams2ndByte == 4) {
         o->oPosY += o->oForwardVel; // weird?
-    else
+    } else {
         cur_obj_move_using_fvel_and_gravity();
+    }
     if (o->oTimer > remainingTime)
         obj_mark_for_deletion(o);
     o->oInteractStatus = INT_STATUS_NONE;

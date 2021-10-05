@@ -13,10 +13,11 @@ void bhv_wf_elevator_tower_platform_loop(void) {
             break;
         case 1:
             cur_obj_play_sound_1(SOUND_ENV_ELEVATOR1);
-            if (o->oTimer > 140)
+            if (o->oTimer > 140) {
                 o->oAction++;
-            else
+            } else {
                 o->oPosY += 5.0f;
+            }
             break;
         case 2:
             if (o->oTimer > 60)
@@ -24,10 +25,11 @@ void bhv_wf_elevator_tower_platform_loop(void) {
             break;
         case 3:
             cur_obj_play_sound_1(SOUND_ENV_ELEVATOR1);
-            if (o->oTimer > 140)
+            if (o->oTimer > 140) {
                 o->oAction = 0;
-            else
+            } else {
                 o->oPosY -= 5.0f;
+            }
             break;
     }
     if (o->parentObj->oAction == 3)

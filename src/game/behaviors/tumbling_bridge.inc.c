@@ -66,13 +66,13 @@ void tumbling_bridge_act_1(void) {
         relativePlatformX = 0;
         relativePlatformZ = 0;
 
-        if (bridgeID == 3)
+        if (bridgeID == 3) {
             relativePlatformX = sTumblingBridgeParams[bridgeID].bridgeRelativeStartingXorZ
                                 + sTumblingBridgeParams[bridgeID].platformWidth * i;
-        else
+        } else {
             relativePlatformZ = sTumblingBridgeParams[bridgeID].bridgeRelativeStartingXorZ
                                 + sTumblingBridgeParams[bridgeID].platformWidth * i;
-
+        }
         if (cur_obj_has_behavior(bhvLllTumblingBridge)) {
             if (i % 3 == 0)
                 relativePlatformY -= 150;
@@ -91,9 +91,9 @@ void tumbling_bridge_act_1(void) {
 
 void tumbling_bridge_act_2(void) {
     cur_obj_hide();
-    if (cur_obj_has_behavior(bhvLllTumblingBridge))
+    if (cur_obj_has_behavior(bhvLllTumblingBridge)) {
         cur_obj_unhide();
-    else if (o->oDistanceToMario > 1200.0f) {
+    } else if (o->oDistanceToMario > 1200.0f) {
         o->oAction = 3;
         cur_obj_unhide();
     }

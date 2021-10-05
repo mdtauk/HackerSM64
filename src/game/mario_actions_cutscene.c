@@ -880,9 +880,7 @@ s32 act_entering_star_door(struct MarioState *m) {
         m->pos[2] += m->marioObj->oMarioReadingSignDPosZ;
 
         set_mario_anim_with_accel(m, MARIO_ANIM_WALKING, 0x00028000);
-    }
-
-    else {
+    } else {
         m->faceAngle[1] = m->usedObj->oMoveAngleYaw;
 
         if (m->actionArg & WARP_FLAG_DOOR_FLIP_MARIO) {
@@ -1010,7 +1008,6 @@ s32 act_spawn_spin_airborne(struct MarioState *m) {
             play_sound(SOUND_ACTION_SPIN, m->marioObj->header.gfx.cameraToObject);
         }
     }
-
     // under 300 units above floor, enter freefall animation
     else {
         m->actionState = 1;

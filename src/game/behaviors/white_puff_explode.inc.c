@@ -28,10 +28,11 @@ void bhv_white_puff_exploding_loop(void) {
         o->oOpacity += o->oWhitePuffOpacityDiff;
         if (o->oOpacity < 2)
             obj_mark_for_deletion(o);
-        if (o->oWhitePuffSlowFade)
+        if (o->oWhitePuffSlowFade) {
             scale = o->oWhitePuffScaleX * ((254 - o->oOpacity) / 254.0f);
-        else
+        } else {
             scale = o->oWhitePuffScaleX * (o->oOpacity / 254.0f);
+        }
         cur_obj_scale(scale);
     }
 }

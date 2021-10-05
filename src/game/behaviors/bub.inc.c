@@ -58,10 +58,11 @@ void bub_act_1(void) {
     if (o->oPosY < o->oCheepCheepWaterLevel - 50.0f) {
         if (dy < 0.0f)
             dy = 0.0f - dy;
-        if (dy < 500.0f)
+        if (dy < 500.0f) {
             bub_move_vertically(1);
-        else
+        } else {
             bub_move_vertically(4);
+        }
     } else {
         o->oPosY = o->oCheepCheepWaterLevel - 50.0f;
         if (dy > 300.0f)
@@ -92,14 +93,16 @@ void bub_act_2(void) {
     if (o->oPosY < o->oCheepCheepWaterLevel - 50.0f) {
         if (dy < 0.0f)
             dy = 0.0f - dy;
-        if (dy < 500.0f)
+        if (dy < 500.0f) {
             bub_move_vertically(2);
-        else
+        } else {
             bub_move_vertically(4);
+        }
     } else {
         o->oPosY = o->oCheepCheepWaterLevel - 50.0f;
-        if (dy > 300.0f)
+        if (dy > 300.0f) {
             o->oPosY -= 1.0f;
+        }
     }
     if (cur_obj_lateral_dist_from_mario_to_home() > 800.0f)
         o->oAngleToMario = cur_obj_angle_to_home();

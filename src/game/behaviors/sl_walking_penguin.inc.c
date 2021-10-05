@@ -27,10 +27,7 @@ static s32 sl_walking_penguin_turn(void) {
     o->oAngleVelYaw = 0x400;
     o->oMoveAngleYaw += o->oAngleVelYaw;
 
-    if (o->oTimer == 31)
-        return TRUE; // Finished turning
-    else
-        return FALSE;
+    return (o->oTimer == 31); // Finished turning
 }
 
 void bhv_sl_walking_penguin_loop(void) {
@@ -49,9 +46,9 @@ void bhv_sl_walking_penguin_loop(void) {
                 o->oSLWalkingPenguinCurStepTimer = 0;
             }
 
-            if (o->oSLWalkingPenguinCurStepTimer < sSLWalkingPenguinErraticSteps[o->oSLWalkingPenguinCurStep].stepLength)
+            if (o->oSLWalkingPenguinCurStepTimer < sSLWalkingPenguinErraticSteps[o->oSLWalkingPenguinCurStep].stepLength) {
                 o->oSLWalkingPenguinCurStepTimer++;
-            else {
+            } else {
                 // Move to next step
                 o->oSLWalkingPenguinCurStepTimer = 0;
                 o->oSLWalkingPenguinCurStep++;
@@ -60,9 +57,9 @@ void bhv_sl_walking_penguin_loop(void) {
                     o->oSLWalkingPenguinCurStep = 0;
             }
 
-            if (o->oPosX < 300.0f)
+            if (o->oPosX < 300.0f) {
                 o->oAction++; // If reached the end of the bridge, turn around and head back.
-            else {
+            } else {
                 // Move and animate the penguin
                 o->oForwardVel = sSLWalkingPenguinErraticSteps[o->oSLWalkingPenguinCurStep].speed;
 

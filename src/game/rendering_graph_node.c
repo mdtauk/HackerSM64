@@ -188,12 +188,12 @@ LookAt lookAt;
 
 u8 ucodeTestSwitch = 1;
 
-void reset_clipping(void)
-{
-    if (gMarioState->action == ACT_CREDITS_CUTSCENE)
+void reset_clipping(void) {
+    if (gMarioState->action == ACT_CREDITS_CUTSCENE) {
         make_viewport_clip_rect(&sEndCutsceneVp);
-    else
+    } else {
         gDPSetScissor(gDisplayListHead++, G_SC_NON_INTERLACE, 0, gBorderHeight, SCREEN_WIDTH, SCREEN_HEIGHT - gBorderHeight);
+    }
 }
 
 /**
@@ -1152,9 +1152,7 @@ void geo_process_root(struct GraphNodeRoot *node, Vp *b, Vp *c, s32 clearColor) 
             clear_frame_buffer(clearColor);
             make_viewport_clip_rect(b);
             *viewport = *b;
-        }
-
-        else if (c != NULL) {
+        } else if (c != NULL) {
             clear_frame_buffer(clearColor);
             make_viewport_clip_rect(c);
         }
