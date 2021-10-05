@@ -256,6 +256,7 @@ static struct Surface *read_surface_data(TerrainData *vertexData, TerrainData **
     min_max_3(v1[1], v2[1], v3[1], &min, &max);
     surface->lowerY = (min - 5);
     surface->upperY = (max + 5);
+    surface->yaw = atan2s(n[2], n[0]);
 
     return surface;
 }

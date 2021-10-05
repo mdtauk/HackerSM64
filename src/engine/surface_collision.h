@@ -15,7 +15,7 @@
 
 #define get_surface_height_at_location(xPos, zPos, surf) (-((xPos) * (surf)->normal[0] + (surf)->normal[2] * (zPos) + (surf)->originOffset) / (surf)->normal[1])
 
-#define SURFACE_YAW(s) (atan2s(((s)->normal[2]), ((s)->normal[0])))
+#define SURFACE_YAW(s) (s->yaw)//(atan2s(((s)->normal[2]), ((s)->normal[0])))
 
 #define RAYCAST_FIND_FLOOR  (1 << 0)
 #define RAYCAST_FIND_WALL   (1 << 1)

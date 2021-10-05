@@ -643,7 +643,7 @@ s32 find_water_level_and_floor(s32 x, s32 z, struct Surface **pfloor) {
     }
 
 #if PUPPYPRINT_DEBUG
-    collisionTime[perfIteration] += osGetTime() - first;
+    collisionTime[perfIteration] += (osGetTime() - first);
 #endif
     return waterLevel;
 }

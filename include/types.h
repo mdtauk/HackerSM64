@@ -371,6 +371,7 @@ struct Surface
     /*0x1C*/ Vec3f normal;
     /*0x28*/ f32 originOffset;
     /*0x2C*/ struct Object *object;
+             s16 yaw;
 };
 
 struct MarioBodyState
