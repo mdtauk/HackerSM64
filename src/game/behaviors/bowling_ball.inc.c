@@ -40,7 +40,7 @@ static Trajectory sThiTinyMetalBallTraj[] = {
 };
 
 void bhv_bowling_ball_init(void) {
-    o->oGravity = 5.5f;
+    o->oGravity  = 5.5f;
     o->oFriction = 1.0f;
     o->oBuoyancy = 2.0f;
 }
@@ -59,7 +59,7 @@ void bowling_ball_set_waypoints(void) {
             break;
 
         case BBALL_BP_STYPE_TTM:
-            o->oPathedStartWaypoint = segmented_to_virtual(ttm_seg7_trajectory_070170A0);
+            o->oPathedStartWaypoint = segmented_to_virtual(ttm_seg7_trajectory_metal_ball_path);
             break;
 
         case BBALL_BP_STYPE_BOB_LOWER:
@@ -147,9 +147,9 @@ void bhv_bowling_ball_loop(void) {
             break;
     }
 
-    if (o->oBehParams2ndByte != 4)
+    if (o->oBehParams2ndByte != 4) {
         set_camera_shake_from_point(SHAKE_POS_BOWLING_BALL, o->oPosX, o->oPosY, o->oPosZ);
-
+    }
     set_object_visibility(o, 4000);
 }
 
@@ -173,20 +173,15 @@ void bhv_generic_bowling_ball_spawner_init(void) {
 }
 
 void bhv_generic_bowling_ball_spawner_loop(void) {
-    struct Object *bowlingBall;
-
-    if (o->oTimer == 256)
+    if (o->oTimer == 256) {
         o->oTimer = 0;
-
+    }
     if (is_point_within_radius_of_mario(o->oPosX, o->oPosY, o->oPosZ, 1000)
-        || (o->oPosY < gMarioObject->header.gfx.pos[1]))
-        return;
-
-    if ((o->oTimer & o->oBBallSpawnerPeriodMinus1) == 0) /* Modulus */
-    {
+        || (o->oPosY < gMarioObject->header.gfx.pos[1])) return;
+    if ((o->oTimer & o->oBBallSpawnerPeriodMinus1) == 0) { /* Modulus */
         if (is_point_within_radius_of_mario(o->oPosX, o->oPosY, o->oPosZ, o->oBBallSpawnerMaxSpawnDist)) {
             if ((s32)(random_float() * o->oBBallSpawnerSpawnOdds) == 0) {
-                bowlingBall = spawn_object(o, MODEL_BOWLING_BALL, bhvBowlingBall);
+                struct Object *bowlingBall = spawn_object(o, MODEL_BOWLING_BALL, bhvBowlingBall);
                 bowlingBall->oBehParams2ndByte = o->oBehParams2ndByte;
             }
         }
@@ -194,18 +189,13 @@ void bhv_generic_bowling_ball_spawner_loop(void) {
 }
 
 void bhv_thi_bowling_ball_spawner_loop(void) {
-    struct Object *bowlingBall;
-
-    if (o->oTimer == 256) {
-        o->oTimer = 0;
-    }
+    if (o->oTimer == 256) o->oTimer = 0;
     if (is_point_within_radius_of_mario(o->oPosX, o->oPosY, o->oPosZ, 800)
         || (o->oPosY < gMarioObject->header.gfx.pos[1])) return;
-
     if ((o->oTimer % 64) == 0) {
         if (is_point_within_radius_of_mario(o->oPosX, o->oPosY, o->oPosZ, 12000)) {
             if ((s32)(random_float() * 1.5f) == 0) {
-                bowlingBall = spawn_object(o, MODEL_BOWLING_BALL, bhvBowlingBall);
+                struct Object *bowlingBall = spawn_object(o, MODEL_BOWLING_BALL, bhvBowlingBall);
                 bowlingBall->oBehParams2ndByte = o->oBehParams2ndByte;
             }
         }
@@ -280,8 +270,9 @@ void bhv_free_bowling_ball_loop(void) {
             break;
 
         case FREE_BBALL_ACT_RESET:
-            if (is_point_within_radius_of_mario(o->oPosX, o->oPosY, o->oPosZ, 5000))
+            if (is_point_within_radius_of_mario(o->oPosX, o->oPosY, o->oPosZ, 5000)) {
                 o->oAction = FREE_BBALL_ACT_IDLE;
+            }
             break;
     }
 }
