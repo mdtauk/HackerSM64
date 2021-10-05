@@ -197,7 +197,7 @@
 // Enables "parallel lakitu camera" or "aglab cam" which lets you move the camera smoothly with the dpad
 #define PARALLEL_LAKITU_CAM
 // Enables Puppy Camera 2, a rewritten camera that can be freely configured and modified.
-#define PUPPYCAM
+//#define PUPPYCAM
 
 // -- GRAPHICS SETTINGS --
 // Enable widescreen (16:9) support
@@ -252,7 +252,7 @@
 // Enable debug level select
 //#define DEBUG_LEVEL_SELECT
 // Enable debug free move (DPad up to enter, A to exit)
-//#define ENABLE_DEBUG_FREE_MOVE
+#define ENABLE_DEBUG_FREE_MOVE
 // Custom debug mode. Press DPAD left to show the debug UI. Press DPAD right to enter the noclip mode.
 //#define CUSTOM_DEBUG
 // Include Puppyprint, a display library for text and large images. Also includes a custom, enhanced performance profiler.
@@ -267,34 +267,17 @@
 //#define UNLOCK_ALL
 
 
-/*
-    Better Extended Bounds by anonymous_moose
-        Thanks to someone2639 for the shiftable segments patch
-        Thanks to Wiseguy for the Surface Pool Full error code and 4x bounds fix
+/**
+ * Better Extended Bounds by anonymous_moose
+ *  Thanks to someone2639 for the shiftable segments patch
+ *  Thanks to Wiseguy for the Surface Pool Full error code and 4x bounds fix
+ * For more details, see surface_load.h.
+ */
 
-    0: Regular bounds
-        Same as vanilla sm64, boundaries are (-8192 to 8191)
-        16x16 collision cells.
-    1: 2x extended bounds
-        level boundaries are twice as big (-16384 to 16383)
-        Collision calculations remain as fast as vanilla, at the cost of using more RAM.
-        32x32 collision cells.
-    2: Regular bounds (performance)
-        Same boundaries as vanilla (-8192 to 8191), but with twice the amount of collision cells
-        Trades more RAM usage for faster collision calculations.
-        32x32 collision cells.
-    3: 4x extended bounds
-        level boundaries are 4 times as big (-32768 to 32767)
-        Collision calculations remain as fast as vanilla, at the cost of using far more RAM (16 times vanilla).
-        64x64 collision cells.
-
-    If you see "SURFACE POOL FULL" or "SURFACE NODE POOL FULL" in game, you should increase
-    SURFACE_POOL_SIZE or SURFACE_NODE_POOL_SIZE, respectively, or reduce the amount of
-    collision surfaces in your level.
-*/
-// Set this to the extended bounds mode you want, then do "make clean".
-// For more details, see surface_load.h.
-#define EXTENDED_BOUNDS_MODE 1
+// Maximum distance from the origin.
+// For best results, this should be a power of 2.
+// Vanilla is 8192.
+#define LEVEL_BOUNDARY_MAX 8192
 
 
 // -- Compatibility safeguards. Don't mess with these unless you know what you're doing.--

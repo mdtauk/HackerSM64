@@ -449,7 +449,7 @@ void spawn_objects_from_info(struct SpawnInfo *spawnInfo) {
     clear_mario_platform();
 
     if (gCurrAreaIndex == 2) {
-        gCCMEnteredSlide |= 1;
+        gCCMEnteredSlide = TRUE;
     }
 
     while (spawnInfo != NULL) {

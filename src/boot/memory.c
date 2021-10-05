@@ -159,7 +159,7 @@ void *main_pool_alloc(u32 size, u32 side) {
             newListHead->next    = NULL;
             addr                 = ((u8 *) sPoolListHeadL + 16);
             sPoolListHeadL       = newListHead;
-        } else {
+        } else { // MEMORY_POOL_RIGHT
             newListHead = (struct MainPoolBlock *) ((u8 *) sPoolListHeadR - size);
             sPoolListHeadR->prev = newListHead;
             newListHead->next    = sPoolListHeadR;

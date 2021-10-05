@@ -141,7 +141,7 @@ void puppyprint_calculate_ram_usage(void) {
     ramsizeSegment[5] = 0x4000 + 0x800 + 0x4000 + 0x800;
     ramsizeSegment[6] = (SURFACE_NODE_POOL_SIZE * sizeof(struct SurfaceNode)) + (SURFACE_POOL_SIZE * sizeof(struct Surface));
     ramsizeSegment[7] = gAudioHeapSize + gAudioInitPoolSize;
-    ramsizeSegment[8] = audioPool[0] + audioPool[1] + audioPool[2] + audioPool[3] + audioPool[4] + audioPool[5] +
+    ramsizeSegment[8] = audioPool[0] + audioPool[1] + audioPool[2] + audioPool[3] + audioPool[ 4] + audioPool[ 5] +
                         audioPool[6] + audioPool[7] + audioPool[8] + audioPool[9] + audioPool[10] + audioPool[11];
 }
 
@@ -359,19 +359,19 @@ void print_console_log(void) {
 
 struct CPUBar {
     u32 *time;
-    u8 colour[3];
+    ColorRGB colour;
     const char str[32];
 };
 
 extern void print_fps(s32 x, s32 y);
 
 struct CPUBar cpu_ordering_table[] = {
-    {collisionTime, {255, 0, 0}, {"Collision: <COL_99505099>"}},
-    {graphTime, {0, 0, 255}, {"Graph: <COL_50509999>"}},
-    {behaviourTime, {0, 255, 0}, {"Behaviour: <COL_50995099>"}},
-    {audioTime, {255, 255, 0}, {"Audio: <COL_99995099>"}},
-    {cameraTime, {0, 255, 255}, {"Camera: <COL_50999999>"}},
-    {dmaTime, {255, 0, 255}, {"DMA: <COL_99509999>"}},
+    { collisionTime, { 255,   0,   0 }, {"Collision: <COL_99505099>"}},
+    { graphTime,     {   0,   0, 255 }, {"Graph: <COL_50509999>"}},
+    { behaviourTime, {   0, 255,   0 }, {"Behaviour: <COL_50995099>"}},
+    { audioTime,     { 255, 255,   0 }, {"Audio: <COL_99995099>"}},
+    { cameraTime,    {   0, 255, 255 }, {"Camera: <COL_50999999>"}},
+    { dmaTime,       { 255,   0, 255 }, {"DMA: <COL_99509999>"}},
 };
 
 #define CPU_TABLE_MAX sizeof(cpu_ordering_table)/sizeof(struct CPUBar)
@@ -397,7 +397,7 @@ void puppyprint_render_profiler(void) {
     print_small_text((SCREEN_WIDTH/2), SCREEN_HEIGHT-16, textBytes, PRINT_TEXT_ALIGN_CENTRE, PRINT_ALL, FONT_OUTLINE);
 
     if (!ramViewer && !benchViewer && !logViewer) {
-        print_fps(16,40);
+        print_fps(16, 40);
         sprintf(textBytes, "CPU: %dus (%d_)#RSP: %dus (%d_)#RDP: %dus (%d_)", (s32)cpuCount, (s32)(cpuCount / 333), (s32)CYCLE_CONV(rspTime), (s32)CYCLE_CONV(rspTime) / 333, (s32)CYCLE_CONV(rdpTime), (s32)CYCLE_CONV(rdpTime) / 333);
         print_small_text(16, 52, textBytes, PRINT_TEXT_ALIGN_LEFT, PRINT_ALL, FONT_OUTLINE);
 
