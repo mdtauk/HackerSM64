@@ -3610,7 +3610,7 @@ s32 collide_with_walls(Vec3f pos, f32 offsetY, f32 radius) {
             vec3f_copy(newPos[i], pos);
             vec3f_copy(norm, wall->normal);
             originOffset = wall->originOffset;
-            offset = vec3_dot(norm, newPos[i]) + originOffset;
+            offset = (vec3_dot(norm, newPos[i]) + originOffset);
             if (ABSF(offset) < radius) {
                 newPos[i][0] += (norm[0] * (radius - offset));
                 newPos[i][2] += (norm[2] * (radius - offset));
