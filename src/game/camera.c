@@ -3227,12 +3227,17 @@ void select_mario_cam_mode(void) {
  * Allocate the GraphNodeCamera's config.camera, and copy `c`'s focus to the Camera's area center point.
  */
 void create_camera(struct GraphNodeCamera *gc, struct AllocOnlyPool *pool) {
-    s16 mode = gc->config.mode;
     struct Camera *c = alloc_only_pool_alloc(pool, sizeof(struct Camera));
 
     gc->config.camera = c;
-    c->mode = mode;
+#ifdef CAMERA_FIX
+    c->mode    = CAMERA_MODE_8_DIRECTIONS;
+    c->defMode = CAMERA_MODE_8_DIRECTIONS;
+#else
+    s16 mode = gc->config.mode;
+    c->mode    = mode;
     c->defMode = mode;
+#endif
     c->cutscene = 0;
     c->doorStatus = DOOR_DEFAULT;
     c->areaCenX = gc->focus[0];
@@ -3595,11 +3600,10 @@ s32 collide_with_walls(Vec3f pos, f32 offsetY, f32 radius) {
     f32 offset;
     Vec3f newPos[MAX_REFEREMCED_WALLS];
     s32 i;
-    s32 numCollisions = 0;
     vec3f_copy(collisionData.pos, pos);
     collisionData.radius = radius;
     collisionData.offsetY = offsetY;
-    numCollisions = find_wall_collisions(&collisionData);
+    s32 numCollisions = find_wall_collisions(&collisionData);
     if (numCollisions != 0) {
         for (i = 0; i < collisionData.numWalls; i++) {
             wall = collisionData.walls[collisionData.numWalls - 1];
@@ -3608,8 +3612,8 @@ s32 collide_with_walls(Vec3f pos, f32 offsetY, f32 radius) {
             originOffset = wall->originOffset;
             offset = vec3_dot(norm, newPos[i]) + originOffset;
             if (ABSF(offset) < radius) {
-                newPos[i][0] += norm[0] * (radius - offset);
-                newPos[i][2] += norm[2] * (radius - offset);
+                newPos[i][0] += (norm[0] * (radius - offset));
+                newPos[i][2] += (norm[2] * (radius - offset));
                 vec3f_copy(pos, newPos[i]);
             }
         }
