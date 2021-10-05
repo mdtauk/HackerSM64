@@ -1190,7 +1190,7 @@ void squish_mario_model(struct MarioState *m) {
  */
 void debug_print_speed_action_normal(struct MarioState *m) {
     if (gShowDebugText) {
-        f32 steepness = sqrtf(sqr(m->floor->normal[0]) + sqr(m->floor->normal[2]));
+        f32 steepness = m->floor->steepness;
         f32 floor_nY = m->floor->normal[1];
 
         print_text_fmt_int(210, 88, "ANG %d", (atan2s(floor_nY, steepness) * 180.0f) / 32768.0f);

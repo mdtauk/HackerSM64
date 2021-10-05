@@ -162,7 +162,7 @@ s32 set_triple_jump_action(struct MarioState *m, UNUSED u32 action, UNUSED u32 a
 void update_sliding_angle(struct MarioState *m, f32 accel, f32 lossFactor) {
     struct Surface *floor = m->floor;
     s16 slopeAngle = m->floorYaw;
-    f32 steepness = sqrtf(sqr(floor->normal[0]) + sqr(floor->normal[2]));
+    f32 steepness = floor->steepness;
 
     m->slideVelX += accel * steepness * sins(slopeAngle);
     m->slideVelZ += accel * steepness * coss(slopeAngle);
@@ -280,7 +280,7 @@ void apply_slope_accel(struct MarioState *m) {
     f32 slopeAccel;
 
     struct Surface *floor = m->floor;
-    f32 steepness = sqrtf(sqr(floor->normal[0]) + sqr(floor->normal[2]));
+    f32 steepness = floor->steepness;
 
     s16 floorDYaw = m->floorYaw - m->faceAngle[1];
 

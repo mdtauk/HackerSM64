@@ -371,6 +371,8 @@ struct Surface
     /*0x1C*/ Vec3f normal;
     /*0x28*/ f32 originOffset;
     /*0x2C*/ struct Object *object;
+             f32 steepness;
+             s16 pitch;
              s16 yaw;
 };
 
