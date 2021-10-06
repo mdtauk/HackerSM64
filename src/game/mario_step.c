@@ -31,6 +31,9 @@ struct Surface gWaterSurfacePseudoFloor = {
     0.0f,                   // steepness
     0x0,                    // pitch
     0x0,                    // yaw
+    { 0, 0, 0 },            // 
+    { 0, 0, 0 },            // 
+    { 0, 0, 0 },            // 
 };
 
 /**

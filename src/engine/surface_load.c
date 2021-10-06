@@ -262,6 +262,16 @@ static struct Surface *read_surface_data(TerrainData *vertexData, TerrainData **
     surface->pitch = atan2s(surface->steepness, n[1]);
     surface->yaw = atan2s(n[2], n[0]);
 
+    vec3_diff(surface->Baryu, surface->vertex2, surface->vertex1); // These 2 could be precalculated :(
+    vec3_diff(surface->Baryv, surface->vertex3, surface->vertex1);
+    surface->BaryProducts[0] =
+        vec3_dot(surface->Baryu, surface->Baryu); // These 3 could also be precalculated :(
+    surface->BaryProducts[1] = vec3_dot(surface->Baryu, surface->Baryv);
+    surface->BaryProducts[2] = vec3_dot(surface->Baryv, surface->Baryv);
+    surface->BaryProducts[3] = 1.f
+                               / (surface->BaryProducts[1] * surface->BaryProducts[1]
+                                  - surface->BaryProducts[0] * surface->BaryProducts[2]);
+
     return surface;
 }
 

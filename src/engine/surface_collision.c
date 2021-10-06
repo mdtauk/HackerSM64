@@ -857,37 +857,48 @@ s32 resolve_floor_or_ceil_collisions(s32 checkCeil, f32 *px, f32 *py, f32 *pz, f
 #define RAY_STEPS  4     /* How many steps to do when casting rays, default to quartersteps.  */
 
 s32 ray_surface_intersect(Vec3f orig, Vec3f dir, f32 dir_length, struct Surface *surface, Vec3f hit_pos, f32 *length) {
-    Vec3f v0, v1, v2, e1, e2, h, s, q;
     // Ignore certain surface types.
-    if ((surface->type == SURFACE_INTANGIBLE) || (surface->flags & SURFACE_FLAG_NO_CAM_COLLISION)) return FALSE;
-    // Get surface normal and some other stuff
+    if (gCheckingSurfaceCollisionsForCamera && ((surface->type == SURFACE_INTANGIBLE) || (surface->flags & SURFACE_FLAG_NO_CAM_COLLISION))) return FALSE;
+    // Get surface normal
     Vec3f norm;
     vec3_copy(norm, surface->normal);
+    // Extend the normal to the length RAY_OFFSET
     vec3_mul_val(norm, RAY_OFFSET);
+    // Get the vertices
+    Vec3f v0, v1, v2;
     vec3_copy(v0, surface->vertex1);
     vec3_copy(v1, surface->vertex2);
     vec3_copy(v2, surface->vertex3);
+    // Move the triangle forward by RAY_OFFSET
     vec3f_add(v0, norm);
     vec3f_add(v1, norm);
     vec3f_add(v2, norm);
+    // Get Edge 1 and Edge 2
+    Vec3f e1, e2;
     vec3f_diff(e1, v1, v0);
     vec3f_diff(e2, v2, v0);
-    // TODO: What is h?
+
+    Vec3f h; //! TODO: What is 'h'?
     vec3f_cross(h, dir, e2);
     // Check if we're perpendicular from the surface
-    f32 a = vec3f_dot(e1, h); // Angle to surface
+    f32 a = vec3f_dot(e1, h);
     if ((a > -NEAR_ZERO) && (a < NEAR_ZERO)) return FALSE;
+
     // Check if we're making contact with the surface
-    f32 f = (1.0f / a);
+    Vec3f s; //! TODO: What is 's'?
     vec3_diff(s, orig, v0);
+    f32 f = (1.0f / a); // Inverse of 'a'
     f32 u = (f * vec3f_dot(s, h));
     if ((u < 0.0f) || (u > 1.0f)) return FALSE;
+
+    Vec3f q; //! TODO: What is 'q'?
     vec3f_cross(q, s, e1);
     f32 v = (f * vec3f_dot(dir, q));
     if ((v < 0.0f) || ((u + v) > 1.0f)) return FALSE;
     // Get the length between our origin and the surface contact point
     *length = (f * vec3f_dot(e2, q));
-    if ((*length <= NEAR_ZERO) || (*length > dir_length)) return FALSE;
+    // Skip if the surface is behind or too far away
+    if ((*length < NEAR_ZERO) || (*length > dir_length)) return FALSE;
     // Successful contact
     Vec3f add_dir;
     vec3f_copy(add_dir, dir);
@@ -905,7 +916,7 @@ void find_surface_on_ray_list(struct SurfaceNode *list, Vec3f orig, Vec3f dir, f
     OSTime first = osGetTime();
 #endif
 
-    // Get upper and lower bounds of ray
+    // Get upper and lower bounds of the entire ray line
     if (dir[1] >= 0.0f) {
         top    = (orig[1] + (dir[1] * dir_length));
         bottom = orig[1];
@@ -932,7 +943,7 @@ void find_surface_on_ray_list(struct SurfaceNode *list, Vec3f orig, Vec3f dir, f
 
 void find_surface_on_ray_cell(s32 cellX, s32 cellZ, Vec3f orig, Vec3f normalized_dir, f32 dir_length, struct Surface **hit_surface, Vec3f hit_pos, f32 *max_length, s32 flags) {
     // Skip if OOB
-    if (cellX >= 0 && cellX <= (NUM_CELLS - 1) && cellZ >= 0 && cellZ <= (NUM_CELLS - 1)) {
+    if ((cellX >= 0) && (cellX <= (NUM_CELLS - 1)) && (cellZ >= 0) && (cellZ <= (NUM_CELLS - 1))) {
         // Iterate through each surface in this partition
         if ((normalized_dir[1] > -NEAR_ONE) && (flags & RAYCAST_FIND_CEIL)) {
             find_surface_on_ray_list( gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_CEILS ].next, orig, normalized_dir, dir_length, hit_surface, hit_pos, max_length);
@@ -970,7 +981,7 @@ void find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Ve
     vec3f_copy(normalized_dir, dir);
     vec3f_normalize(normalized_dir);
 
-    // Get our cell coordinate
+    // Get current cell coordinate
     fCellX = ((orig[0] + LEVEL_BOUNDARY_MAX) * invcell);
     fCellZ = ((orig[2] + LEVEL_BOUNDARY_MAX) * invcell);
     cellX = fCellX;
@@ -984,12 +995,14 @@ void find_surface_on_ray(Vec3f orig, Vec3f dir, struct Surface **hit_surface, Ve
         return;
     }
 
+    // https://en.wikipedia.org/wiki/Digital_differential_analyzer_%28graphics_algorithm%29
     // Get cells we cross using DDA
-    f32 absMaxDir = ABS(MAX(dir[0], dir[2]));
-    f32 step = ((RAY_STEPS * absMaxDir) * invcell);
+    f32 step = MAX(dir[0], dir[2]);
+    step = ((RAY_STEPS * ABS(step)) * invcell);
     f32 dx = ((dir[0] / step) * invcell);
     f32 dz = ((dir[2] / step) * invcell);
 
+    // Iterate through each additional cell
     for (i = 0; i < step && *hit_surface == NULL; i++) {
         find_surface_on_ray_cell(cellX, cellZ, orig, normalized_dir, dir_length, hit_surface, hit_pos, &max_length, flags);
 
@@ -1041,3 +1054,28 @@ struct Surface *triangle(Vec3f v1, Vec3f v2, Vec3f v3) {
     return result;
 }
 
+#define EPSILON __FLT_EPSILON__
+
+inline f32 ray_surf_intersect(Vec3f rayStart, Vec3f rayDir, f32 rayDist, Vec3f intersectionOut, struct Surface *surf) {
+    Vec3f w;    // Intersection point - vertex1
+    // f32 s;      // Barycentric coordinates
+    // Intersect the ray with the plane that the surface lies in
+    // a = -(originOffset + normal dot rayStart) / (normal dot rayDir)
+    f32 denom = vec3f_dot(&surf->normal[0], rayDir);
+    // Prevent division by zero and throw out collision with backfaces (negative denominator)
+    if ((denom != 0) && (denom > -EPSILON)) return 0;
+    f32 distOnRay = (-((surf->originOffset) + vec3f_dot(&surf->normal[0], rayStart)) / denom);
+    if (distOnRay > rayDist) return 0;
+    if (distOnRay < 0) return 0;
+    for (s32 i = 0; i < 3; i++) {
+        intersectionOut[i] = ((rayDir[i] * distOnRay) + rayStart[i]);
+        w[i] = (intersectionOut[i] - surf->vertex1[i]);
+    }
+    f32 wu = vec3f_dot(w, surf->Baryu); // Dot products
+    w[0] = vec3f_dot(w, surf->Baryv);
+    w[1] = (((surf->BaryProducts[1] * w[0]) - (surf->BaryProducts[2] * wu)) * surf->BaryProducts[3]);
+    if ((w[1] < -NEAR_ZERO) || (w[1] > (1 + NEAR_ZERO))) return 0;
+    wu = (((surf->BaryProducts[1] * wu) - (surf->BaryProducts[0] * w[0])) * surf->BaryProducts[3]);
+    if ((wu < -NEAR_ZERO) || ((w[1] + wu) > (1 + NEAR_ZERO))) return 0;
+    return distOnRay;
+}

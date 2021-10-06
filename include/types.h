@@ -376,6 +376,9 @@ struct Surface
              f32 steepness;
              s16 pitch;
              s16 yaw;
+             f32 Baryu[3];
+             f32 Baryv[3];
+             f32 BaryProducts[4];
 };
 
 struct MarioBodyState
