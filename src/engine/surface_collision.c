@@ -735,8 +735,11 @@ void debug_surface_list_info(f32 xPos, f32 zPos) {
     s32 numWalls  = 0;
     s32 numCeils  = 0;
 
-    s32 cellX = GET_CELL_COORD(xPos);
-    s32 cellZ = GET_CELL_COORD(zPos);
+    s32 x = xPos;
+    s32 z = zPos;
+
+    s32 cellX = GET_CELL_COORD(x);
+    s32 cellZ = GET_CELL_COORD(z);
 
     list = gStaticSurfacePartition[cellZ][cellX][SPATIAL_PARTITION_FLOORS].next;
     numFloors += surface_list_length(list);

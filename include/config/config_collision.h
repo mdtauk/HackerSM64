@@ -24,6 +24,14 @@
 #define COLLISION_DATA_TYPE s16
 #define ROOM_DATA_TYPE s8
 
-// Set this to the extended bounds mode you want, then do "make clean".
-// See /src/engine/extended_bounds.h for more info
-#define EXTENDED_BOUNDS_MODE 1
+/**
+ * Better Extended Bounds by anonymous_moose
+ *  Thanks to someone2639 for the shiftable segments patch
+ *  Thanks to Wiseguy for the Surface Pool Full error code and 4x bounds fix
+ * For more details, see surface_load.h
+ **/
+
+// Maximum distance from the origin.
+// For best results, this should be a power of 2.
+// Vanilla is 8192.
+#define LEVEL_BOUNDARY_MAX 8192
