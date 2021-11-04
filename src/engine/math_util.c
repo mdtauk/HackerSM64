@@ -4,14 +4,12 @@
 #include "engine/graph_node.h"
 #include "math_util.h"
 #include "surface_collision.h"
-#include "extended_bounds.h"
 #include "trig_tables.inc.c"
 #include "surface_load.h"
 #include "game/puppyprint.h"
 #include "game/rendering_graph_node.h"
 
 #include "config.h"
-
 
 Vec3f gVec3fX    = {  1.0f,  0.0f,  0.0f };
 Vec3f gVec3fY    = {  0.0f,  1.0f,  0.0f };
