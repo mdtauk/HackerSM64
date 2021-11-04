@@ -35,3 +35,7 @@
 // For best results, this should be a power of 2.
 // Vanilla is 8192.
 #define LEVEL_BOUNDARY_MAX 8192
+
+// The level is split into a NUM_CELLS by NUM_CELLS grid of collision cells.
+// This is the number of cells along each axis in an area.
+#define NUM_CELLS   32
