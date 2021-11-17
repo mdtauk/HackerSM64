@@ -5,15 +5,17 @@
 
 #include "internal.h"
 
-#define SOUND_LOAD_STATUS_NOT_LOADED     0
-#define SOUND_LOAD_STATUS_IN_PROGRESS    1
-#define SOUND_LOAD_STATUS_COMPLETE       2
-#define SOUND_LOAD_STATUS_DISCARDABLE    3
-#define SOUND_LOAD_STATUS_4              4
-#define SOUND_LOAD_STATUS_5              5
+enum SoundLoadStatus {
+    SOUND_LOAD_STATUS_NOT_LOADED,
+    SOUND_LOAD_STATUS_IN_PROGRESS,
+    SOUND_LOAD_STATUS_COMPLETE,
+    SOUND_LOAD_STATUS_DISCARDABLE,
+    SOUND_LOAD_STATUS_4,
+    SOUND_LOAD_STATUS_5
+};
 
 #define IS_BANK_LOAD_COMPLETE(bankId) (gBankLoadStatus[bankId] >= SOUND_LOAD_STATUS_COMPLETE)
-#define IS_SEQ_LOAD_COMPLETE(seqId) (gSeqLoadStatus[seqId] >= SOUND_LOAD_STATUS_COMPLETE)
+#define IS_SEQ_LOAD_COMPLETE(seqId)   ( gSeqLoadStatus[ seqId] >= SOUND_LOAD_STATUS_COMPLETE)
 
 struct SoundAllocPool {
     u8 *start;
@@ -111,6 +113,9 @@ void *soundAlloc(struct SoundAllocPool *pool, u32 size);
 void *sound_alloc_uninitialized(struct SoundAllocPool *pool, u32 size);
 void sound_init_main_pools(s32 sizeForAudioInitPool);
 void sound_alloc_pool_init(struct SoundAllocPool *pool, void *memAddr, u32 size);
+#if PUPPYPRINT_DEBUG
+void puppyprint_get_allocated_pools(s32 *audioPoolList);
+#endif
 #ifdef VERSION_SH
 void *alloc_bank_or_seq(s32 poolIdx, s32 size, s32 arg3, s32 id);
 void *get_bank_or_seq(s32 poolIdx, s32 arg1, s32 id);
@@ -122,7 +127,7 @@ void *get_bank_or_seq(struct SoundMultiPool *arg0, s32 arg1, s32 id);
 s32 audio_shut_down_and_reset_step(void);
 void audio_reset_session(void);
 #else
-void audio_reset_session(struct AudioSessionSettings *preset);
+void audio_reset_session(struct AudioSessionSettings *preset, s32 presetId);
 #endif
 void discard_bank(s32 bankId);
 

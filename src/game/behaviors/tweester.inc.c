@@ -24,14 +24,11 @@ struct ObjectHitbox sTweesterHitbox = {
  */
 void tweester_scale_and_move(f32 preScale) {
     s16 dYaw  = 0x2C00;
-    f32 scale = preScale * 0.4;
+    f32 scale = preScale * 0.4f;
 
-    o->header.gfx.scale[0]
-        = (( coss(o->oTweesterScaleTimer) + 1.0) * 0.5 * 0.3 + 1.0) * scale;
-    o->header.gfx.scale[1]
-        = ((-coss(o->oTweesterScaleTimer) + 1.0) * 0.5 * 0.5 + 0.5) * scale;
-    o->header.gfx.scale[2]
-        = (( coss(o->oTweesterScaleTimer) + 1.0) * 0.5 * 0.3 + 1.0) * scale;
+    o->header.gfx.scale[0] = (( coss(o->oTweesterScaleTimer) + 1.0f) * 0.5f * 0.3f + 1.0f) * scale;
+    o->header.gfx.scale[1] = ((-coss(o->oTweesterScaleTimer) + 1.0f) * 0.5f * 0.5f + 0.5f) * scale;
+    o->header.gfx.scale[2] = (( coss(o->oTweesterScaleTimer) + 1.0f) * 0.5f * 0.3f + 1.0f) * scale;
 
     o->oTweesterScaleTimer += 0x200;
     o->oForwardVel = 14.0f;
@@ -78,7 +75,7 @@ void tweester_act_chase(void) {
     cur_obj_play_sound_1(SOUND_ENV_WIND1);
 
     if (cur_obj_lateral_dist_from_mario_to_home() < activationRadius
-        && o->oSubAction == TWEESTER_SUB_ACT_CHASE) {
+        && o->oSubAction == TWEESTER_SUB_ACT_CHASE_MARIO) {
 
         o->oForwardVel = 20.0f;
         cur_obj_rotate_yaw_toward(o->oAngleToMario, 0x200);
@@ -131,20 +128,20 @@ void tweester_act_hide(void) {
 }
 
 // Array of Tweester action functions.
-void (*sTweesterActions[])(void) = {
+ObjActionFunc sTweesterActions[] = {
     tweester_act_idle,
     tweester_act_chase,
     tweester_act_hide,
 };
 
 /**
- * Loop behavior for Tweester. 
+ * Loop behavior for Tweester.
  * Loads the hitbox and calls its relevant action.
  */
 void bhv_tweester_loop(void) {
     obj_set_hitbox(o, &sTweesterHitbox);
     cur_obj_call_action_function(sTweesterActions);
-    o->oInteractStatus = 0;
+    o->oInteractStatus = INT_STATUS_NONE;
 }
 
 /**
@@ -156,7 +153,7 @@ void bhv_tweester_sand_particle_loop(void) {
     o->oForwardVel += 15.0f;
     o->oPosY += 22.0f;
 
-    cur_obj_scale(random_float() + 1.0);
+    cur_obj_scale(random_float() + 1.0f);
 
     if (o->oTimer == 0) {
         obj_translate_xz_random(o, 100.0f);

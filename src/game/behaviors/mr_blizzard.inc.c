@@ -13,31 +13,29 @@ struct ObjectHitbox sMrBlizzardHitbox = {
     /* hurtboxHeight:     */ 170,
 };
 
+static struct SpawnParticlesInfo sMrBlizzardParticlesInfo = {
+    /* behParam:        */ 0,
+    /* count:           */ 6,
+    /* model:           */ MODEL_WHITE_PARTICLE,
+    /* offsetY:         */ 0,
+    /* forwardVelBase:  */ 5,
+    /* forwardVelRange: */ 5,
+    /* velYBase:        */ 10,
+    /* velYRange:       */ 10,
+    /* gravity:         */ -3,
+    /* dragStrength:    */ 0,
+    /* sizeBase:        */ 3.0f,
+    /* sizeRange:       */ 5.0f,
+};
+
 // Mr. Blizzard particle spawner.
-void mr_blizzard_spawn_white_particles(s8 count, s8 offsetY, s8 forwardVelBase, s8 velYBase,
-                                       s8 sizeBase) {
-    static struct SpawnParticlesInfo D_80331A00 = {
-        /* behParam:        */ 0,
-        /* count:           */ 6,
-        /* model:           */ MODEL_WHITE_PARTICLE,
-        /* offsetY:         */ 0,
-        /* forwardVelBase:  */ 5,
-        /* forwardVelRange: */ 5,
-        /* velYBase:        */ 10,
-        /* velYRange:       */ 10,
-        /* gravity:         */ -3,
-        /* dragStrength:    */ 0,
-        /* sizeBase:        */ 3.0f,
-        /* sizeRange:       */ 5.0f,
-    };
-
-    D_80331A00.count = count;
-    D_80331A00.offsetY = offsetY;
-    D_80331A00.forwardVelBase = forwardVelBase;
-    D_80331A00.velYBase = velYBase;
-    D_80331A00.sizeBase = sizeBase;
-
-    cur_obj_spawn_particles(&D_80331A00);
+void mr_blizzard_spawn_white_particles(s8 count, s8 offsetY, s8 forwardVelBase, s8 velYBase, s8 sizeBase) {
+    sMrBlizzardParticlesInfo.count = count;
+    sMrBlizzardParticlesInfo.offsetY = offsetY;
+    sMrBlizzardParticlesInfo.forwardVelBase = forwardVelBase;
+    sMrBlizzardParticlesInfo.velYBase = velYBase;
+    sMrBlizzardParticlesInfo.sizeBase = sizeBase;
+    cur_obj_spawn_particles(&sMrBlizzardParticlesInfo);
 }
 
 /**
@@ -180,15 +178,13 @@ static void mr_blizzard_act_rotate(void) {
                 o->prevObj = o->oMrBlizzardHeldObj = NULL;
                 cur_obj_become_intangible();
             }
-        }
-        // If Mario gets too far away, move to burrow action and delete the snowball.
-        else if (o->oDistanceToMario > 1500.0f) {
+            // If Mario gets too far away, move to burrow action and delete the snowball.
+        } else if (o->oDistanceToMario > 1500.0f) {
             o->oAction = MR_BLIZZARD_ACT_BURROW;
             o->oMrBlizzardChangeInDizziness = 300.0f;
             o->prevObj = o->oMrBlizzardHeldObj = NULL;
-        }
-        // After 60 frames, if Mario is within 11.25 degrees of Mr. Blizzard, throw snowball action.
-        else if (o->oTimer > 60 && abs_angle_diff(o->oAngleToMario, o->oMoveAngleYaw) < 0x800) {
+            // After 60 frames, if Mario is within 11.25 degrees of Mr. Blizzard, throw snowball action.
+        } else if (o->oTimer > 60 && abs_angle_diff(o->oAngleToMario, o->oMoveAngleYaw) < 0x800) {
             o->oAction = MR_BLIZZARD_ACT_THROW_SNOWBALL;
         }
     }
@@ -239,14 +235,13 @@ static void mr_blizzard_act_death(void) {
         if (o->oMrBlizzardScale != 0.0f) {
             if ((o->oMrBlizzardScale -= 0.03f) <= 0.0f) {
                 o->oMrBlizzardScale = 0.0f;
-                if (!(o->oBehParams & 0x0000FF00)) {
+                if (!GET_BPARAM3(o->oBehParams)) {
                     obj_spawn_loot_yellow_coins(o, o->oNumLootCoins, 20.0f);
-                    set_object_respawn_info_bits(o, 1);
+                    set_object_respawn_info_bits(o, RESPAWN_INFO_TYPE_NORMAL);
                 }
             }
-        }
-        // Reset Mr. Blizzard if Mario leaves its radius.
-        else if (o->oDistanceToMario > 1000.0f) {
+            // Reset Mr. Blizzard if Mario leaves its radius.
+        } else if (o->oDistanceToMario > 1000.0f) {
             cur_obj_init_animation_with_sound(1);
 
             o->oAction = MR_BLIZZARD_ACT_SPAWN_SNOWBALL;
@@ -309,12 +304,11 @@ static void mr_blizzard_act_jump(void) {
                 o->oVelY = 25.0f;
                 o->oMrBlizzardTimer = 30;
                 o->oMrBlizzardDistFromHome = 0;
-            }
-            // Jump forward.
-            else {
+                // Jump forward.
+            } else {
                 o->oForwardVel = 10.0f;
                 o->oVelY = 50.0f;
-                o->oMoveFlags = 0;
+                o->oMoveFlags = OBJ_MOVE_NONE;
             }
         }
     } else if (o->oMoveFlags & OBJ_MOVE_MASK_ON_GROUND) {
@@ -410,7 +404,7 @@ static void mr_blizzard_snowball_act_1(void) {
         }
 
         o->oAction = 2;
-        o->oMoveFlags = 0;
+        o->oMoveFlags = OBJ_MOVE_NONE;
     }
 }
 

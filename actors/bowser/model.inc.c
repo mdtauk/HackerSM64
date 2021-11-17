@@ -52,13 +52,13 @@ ALIGNED8 static const Texture bowser_seg6_texture_06025C38[] = {
 
 // unreferenced, seen in pre-Spaceworld 1995 B-roll footage build
 // 0x06026438
-ALIGNED8 static const Texture bowser_seg6_texture_06026438[] = {
+UNUSED ALIGNED8 static const Texture bowser_seg6_texture_06026438[] = {
 #include "actors/bowser/bowser_blue_eye_unused.rgba16.inc.c"
 };
 
 // unreferenced (stubbed texture? possibly original texture for mouth)
 // 0x06027438
-ALIGNED8 static const Texture bowser_seg6_texture_06027438[] = {
+UNUSED ALIGNED8 static const Texture bowser_seg6_texture_06027438[] = {
 #include "actors/bowser/bowser_mouth_unused.rgba16.inc.c"
 };
 
@@ -1184,7 +1184,6 @@ const Gfx bowser_seg6_dl_0603B8D0[] = {
     gsSPEndDisplayList(),
 };
 
-#if BUGFIX_BOWSER_FADING_OUT
 // 0x0603B948 - 0x0603B9C8
 const Gfx bowser_seg6_dl_0603B948[] = {
     gsDPPipeSync(),
@@ -1204,7 +1203,6 @@ const Gfx bowser_seg6_dl_0603B948[] = {
     gsSPSetGeometryMode(G_LIGHTING),
     gsSPEndDisplayList(),
 };
-#endif
 
 // 0x0603B948
 static const Vtx bowser_seg6_vertex_0603B948[] = {
@@ -2870,7 +2868,6 @@ const Gfx bowser_seg6_dl_06040210[] = {
     gsSPEndDisplayList(),
 };
 
-#if BUGFIX_BOWSER_FADING_OUT
 // 0x06040358 - 0x06040428
 const Gfx bowser_seg6_dl_06040358[] = {
     gsDPPipeSync(),
@@ -2900,7 +2897,6 @@ const Gfx bowser_seg6_dl_06040358[] = {
     gsSPDisplayList(bowser_seg6_dl_060401F0),
     gsSPEndDisplayList(),
 };
-#endif
 
 // 0x060402D8
 static const Vtx bowser_seg6_vertex_060402D8[] = {

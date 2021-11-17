@@ -3,24 +3,28 @@
 #include "printf.h"
 
 #define ATOI(i, a)                                                                                     \
-    for (i = 0; *a >= '0' && *a <= '9'; a++)                                                           \
-        if (i < 999)                                                                                   \
-            i = *a + i * 10 - '0';
+    for (i = 0; *a >= '0' && *a <= '9'; a++) {                                                         \
+        if (i < 999) {                                                                                 \
+            i = (*a + (i * 10) - '0');                                                                 \
+        }                                                                                              \
+    }
 #define _PROUT(dst, fmt, _size)                                                                        \
     if (_size > 0) {                                                                                   \
         dst = prout(dst, fmt, _size);                                                                  \
-        if (dst != 0)                                                                                  \
+        if (dst != 0) {                                                                                \
             sp78.size += _size;                                                                        \
-        else                                                                                           \
+        } else {                                                                                       \
             return sp78.size;                                                                          \
+        }                                                                                              \
     }
 #define _PAD(i, m, c, src, extracond)                                                                  \
     if (extracond && m > 0)                                                                            \
         for (i = m; i > 0; i -= c) {                                                                   \
-            if ((u32) i > 32)                                                                          \
+            if ((u32) i > 32) {                                                                        \
                 c = 32;                                                                                \
-            else                                                                                       \
+            } else {                                                                                   \
                 c = i;                                                                                 \
+            }                                                                                          \
             _PROUT(dst, src, c);                                                                       \
         }
 
@@ -30,7 +34,7 @@ const u32 flags_arr[] = { FLAGS_SPACE, FLAGS_PLUS, FLAGS_MINUS, FLAGS_HASH, FLAG
 char _spaces[] = "                                ";
 char _zeroes[] = "00000000000000000000000000000000";
 
-static void _Putfld(printf_struct *, va_list *, u8, u8 *);
+static void _Putfld(printf_struct *a0, va_list *args, u8 type, u8 *buf);
 
 s32 _Printf(char *(*prout)(char *, const char *, size_t), char *dst, const char *fmt, va_list args) {
     printf_struct sp78;

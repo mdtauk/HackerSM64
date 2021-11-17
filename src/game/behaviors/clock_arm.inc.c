@@ -4,11 +4,9 @@
  * Main loop of the hour and minute hands of the Tick Tock Clock painting.
  */
 void bhv_rotating_clock_arm_loop(void) {
-    struct Surface *marioSurface;
+    struct Surface *marioSurface = gMarioState->floor;
     u16 rollAngle = o->oFaceAngleRoll;
-
-    o->oFloorHeight =
-        find_floor(gMarioObject->oPosX, gMarioObject->oPosY, gMarioObject->oPosZ, &marioSurface);
+    o->oFloorHeight = gMarioState->floorHeight;
 
     // Seems to make sure Mario is on a default surface & 4 frames pass before
     //   allowing him to change the Tick Tock Clock speed setting.
@@ -16,7 +14,7 @@ void bhv_rotating_clock_arm_loop(void) {
     //   to make sure the setting isn't accidentally locked in as you fly out.
     if (o->oAction == 0) {
         if (marioSurface->type == SURFACE_DEFAULT && o->oTimer >= 4) {
-            o->oAction++;
+            o->oAction = 1;
         }
     } else if (o->oAction == 1) {
         // If Mario is touching the Tick Tock Clock painting...
@@ -35,7 +33,7 @@ void bhv_rotating_clock_arm_loop(void) {
                     gTTCSpeedSetting = TTC_SPEED_FAST;
                 } else if (rollAngle < 0x954C) { // 150..210 degrees from 12 o'clock.
                     gTTCSpeedSetting = TTC_SPEED_RANDOM;
-                } else if (rollAngle < 0xF546) { // 15..150 degrees from 12 o'clock.
+                } else if (rollAngle < 0xF546) { //  15..150 degrees from 12 o'clock.
                     gTTCSpeedSetting = TTC_SPEED_SLOW;
                 } else { // < 15 degrees from 12 o'clock.
                     gTTCSpeedSetting = TTC_SPEED_STOPPED;
@@ -43,8 +41,7 @@ void bhv_rotating_clock_arm_loop(void) {
             }
 
             // Increment the action to stop animating the hands.
-            o->oAction++;
-        } else {
+            o->oAction = 2;
         }
     }
 

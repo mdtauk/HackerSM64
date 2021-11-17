@@ -4,20 +4,8 @@
 #include <PR/ultratypes.h>
 #include "types.h"
 
-#define ENVFX_MODE_NONE     0  // no effects
-#define ENVFX_SNOW_NORMAL   1  // CCM, SL
-#define ENVFX_SNOW_WATER    2  // Secret Aquarium, Sunken Ship
-#define ENVFX_SNOW_BLIZZARD 3  // unused
-
-#define ENVFX_BUBBLE_START      10 // Separates snow effects and flower/bubble effects
-
-#define ENVFX_FLOWERS           11 // unused
-#define ENVFX_LAVA_BUBBLES      12 // LLL, BitFS, Bowser 2
-#define ENVFX_WHIRLPOOL_BUBBLES 13 // DDD
-#define ENVFX_JETSTREAM_BUBBLES 14 // JRB, DDD (submarine area)
-
 struct EnvFxParticle {
-    s8 isAlive;
+    s8 isAlive : 1;
     s16 animFrame; // lava bubbles and flowers have frame animations
     s32 xPos;
     s32 yPos;
@@ -29,10 +17,9 @@ struct EnvFxParticle {
 };
 
 extern s8 gEnvFxMode;
-extern UNUSED s32 D_80330644;
 
 extern struct EnvFxParticle *gEnvFxBuffer;
-extern Vec3i gSnowCylinderLastPos;
+extern Vec3s gSnowCylinderLastPos;
 extern s16 gSnowParticleCount;
 
 Gfx *envfx_update_particles(s32 mode, Vec3s marioPos, Vec3s camTo, Vec3s camFrom);

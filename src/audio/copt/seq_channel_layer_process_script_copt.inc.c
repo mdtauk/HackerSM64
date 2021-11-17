@@ -11,14 +11,6 @@
 #include "audio/external.h"
 #include "audio/effects.h"
 
-#define PORTAMENTO_IS_SPECIAL(x) ((x).mode & 0x80)
-#define PORTAMENTO_MODE(x) ((x).mode & ~0x80)
-#define PORTAMENTO_MODE_1 1
-#define PORTAMENTO_MODE_2 2
-#define PORTAMENTO_MODE_3 3
-#define PORTAMENTO_MODE_4 4
-#define PORTAMENTO_MODE_5 5
-
 #define COPT 0
 #if COPT
 #define M64_READ_U8(state, dst) \
@@ -34,7 +26,6 @@
     dst = _pc;                  \
 }
 #endif
-
 
 #if COPT
 #define M64_READ_S16(state, dst) \
@@ -72,11 +63,10 @@
 #define GET_INSTRUMENT(seqChannel, instId, _instOut, _adsr, dst, l) \
 { \
 struct AdsrSettings *adsr = _adsr; \
-struct Instrument **instOut = _instOut;\
+struct Instrument **instOut = _instOut; \
     u8 _instId = instId; \
     struct Instrument *inst; \
-    UNUSED u32 pad; \
-        /* copt inlines instId here  */ \
+    /* copt inlines instId here  */ \
     if (instId >= gCtlEntries[(*seqChannel).bankId].numInstruments) { \
         _instId = gCtlEntries[(*seqChannel).bankId].numInstruments; \
         if (_instId == 0) { \
@@ -110,28 +100,25 @@ struct Instrument **instOut = _instOut;\
     } \
     gAudioErrorFlags = _instId + 0x20000; \
     *instOut = NULL; \
-    ret ## l: ; \
+    ret ## l:; \
 }
 #endif
 
 void seq_channel_layer_process_script(struct SequenceChannelLayer *layer) {
-    struct SequencePlayer *seqPlayer;   // sp5C, t4
-    struct SequenceChannel *seqChannel; // sp58, t5
     struct M64ScriptState *state;
     struct Portamento *portamento;
     struct AudioBankSound *sound;
     struct Instrument *instrument;
     struct Drum *drum;
     s32 temp_a0_5;
-    u8 sameSound;
     u8 cmd;                             // a0 sp3E, EU s2
     u8 cmdSemitone;                     // sp3D, t0
-    u16 sp3A;                           // t2, a0, a1
+    u16 sp3A = 0;                       // t2, a0, a1
     f32 tuning;                         // f0
-    s32 vel;                            // sp30, t3
+    s32 vel  = 0;                       // sp30, t3
     s32 usedSemitone;                   // a1
-    f32 freqScale;                      // sp28, f0
-    f32 sp24;
+    f32 freqScale = 0.0f;               // sp28, f0
+    f32 sp24      = 0.0f;
     f32 temp_f12;
     f32 temp_f2;
 
@@ -143,7 +130,7 @@ void seq_channel_layer_process_script(struct SequenceChannelLayer *layer) {
 #pragma inline routine(get_instrument)
 #endif
 
-    sameSound = TRUE;
+    u8 sameSound = TRUE;
     if ((*layer).enabled == FALSE) {
         return;
     }
@@ -166,11 +153,11 @@ void seq_channel_layer_process_script(struct SequenceChannelLayer *layer) {
         layer->portamento.mode = 0;
     }
 
-    seqChannel = (*layer).seqChannel;
-    seqPlayer = (*seqChannel).seqPlayer;
+    struct SequenceChannel *seqChannel = (*layer).seqChannel;
+    struct SequencePlayer  *seqPlayer = (*seqChannel).seqPlayer;
     for (;;) {
         state = &layer->scriptState;
-        //M64_READ_U8(state, cmd);
+        // M64_READ_U8(state, cmd);
         {
             u8 *_ptr_pc;
             _ptr_pc = (*state).pc++;
@@ -222,7 +209,7 @@ void seq_channel_layer_process_script(struct SequenceChannelLayer *layer) {
                 if (cmd == 0xc1) {
                     layer->velocitySquare = (f32)(temp_a0_5 * temp_a0_5);
                 } else {
-                    layer->pan = (f32) temp_a0_5 / US_FLOAT(128.0);
+                    layer->pan = (f32) temp_a0_5 / 128.0f;
                 }
                 break;
 
@@ -238,18 +225,8 @@ void seq_channel_layer_process_script(struct SequenceChannelLayer *layer) {
 
             case 0xc4: // layer_somethingon
             case 0xc5: // layer_somethingoff
-                //! copt needs a ternary:
-                //layer->continuousNotes = (cmd == 0xc4) ? TRUE : FALSE;
-                {
-                    u8 setting;
-                    if (cmd == 0xc4) {
-                        setting = TRUE;
-                    } else {
-                        setting = FALSE;
-                    }
-                    layer->continuousNotes = setting;
-                    seq_channel_layer_note_decay(layer);
-                }
+                layer->continuousNotes = (cmd == 0xc4);
+                seq_channel_layer_note_decay(layer);
                 break;
 
             case 0xc3: // layer_setshortnotedefaultplaypercentage
@@ -360,8 +337,7 @@ l1138:
         layer->duration = layer->noteDuration * sp3A / 256;
         if ((seqPlayer->muted && (seqChannel->muteBehavior & MUTE_BEHAVIOR_STOP_NOTES) != 0)
             || seqChannel->stopSomething2
-            || !seqChannel->hasInstrument
-        ) {
+            || !seqChannel->hasInstrument) {
             layer->stopSomething = TRUE;
         } else {
             if (seqChannel->instOrWave == 0) { // drum
@@ -383,7 +359,7 @@ l1138:
                 } else {
                     layer->adsr.envelope = drum->envelope;
                     layer->adsr.releaseRate = drum->releaseRate;
-                    layer->pan = FLOAT_CAST(drum->pan) / US_FLOAT(128.0);
+                    layer->pan = FLOAT_CAST(drum->pan) / 128.0f;
                     layer->sound = &drum->sound;
                     layer->freqScale = layer->sound->tuning;
                 }
@@ -400,13 +376,7 @@ l1138:
                     }
 
                     if (layer->portamento.mode != 0) {
-                        //! copt needs a ternary:
-                        //usedSemitone = (layer->portamentoTargetNote < cmdSemitone) ? cmdSemitone : layer->portamentoTargetNote;
-                        if (layer->portamentoTargetNote < cmdSemitone) {
-                            usedSemitone = cmdSemitone;
-                        } else {
-                            usedSemitone = layer->portamentoTargetNote;
-                        }
+                        usedSemitone = (layer->portamentoTargetNote < cmdSemitone) ? cmdSemitone : layer->portamentoTargetNote;
 
                         if (instrument != NULL) {
                             sound = (u8) usedSemitone < instrument->normalRangeLo ? &instrument->lowNotesSound
@@ -440,13 +410,13 @@ l1138:
                                 goto l13cc;
                         }
 l13cc:
-                        portamento->extent = sp24 / freqScale - US_FLOAT(1.0);
+                        portamento->extent = sp24 / freqScale - 1.0f;
                         if (PORTAMENTO_IS_SPECIAL((*layer).portamento)) {
-                            portamento->speed = US_FLOAT(32512.0) * FLOAT_CAST((*seqPlayer).tempo)
+                            portamento->speed = 32512.0f * FLOAT_CAST((*seqPlayer).tempo)
                                                 / ((f32)(*layer).delay * (f32) gTempoInternalToExternal
                                                    * FLOAT_CAST((*layer).portamentoTime));
                         } else {
-                            portamento->speed = US_FLOAT(127.0) / FLOAT_CAST((*layer).portamentoTime);
+                            portamento->speed = 127.0f / FLOAT_CAST((*layer).portamentoTime);
                         }
                         portamento->cur = 0.0f;
                         layer->freqScale = freqScale;

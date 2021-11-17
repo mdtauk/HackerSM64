@@ -10,7 +10,7 @@ static const Lights1 hmc_seg7_lights_070241B8 = gdSPDefLights1(
 // No gdSPDefLights1 macro defined because of odd different light value (0xff and 0xfa)
 static const Lights1 hmc_seg7_lights_070241D0 = {
     {{  {0x40, 0x40, 0x80}, 0, {0x40, 0x40, 0x80}, 0} },
-    {{{ {0x64, 0x64, 0xff}, 0, {0x64, 0x64, 0xfa}, 0, {0x28, 0x28, 0x28},0} }} 
+    {{{ {0x64, 0x64, 0xff}, 0, {0x64, 0x64, 0xfa}, 0, {0x28, 0x28, 0x28},0} }}
 };
 
 // Appears to lock 4 of the sides when shimmering and in use. Unused.
@@ -497,9 +497,6 @@ static const PaintingData *const hmc_seg7_painting_texture_maps_07024CD4[] = {
     hmc_seg7_pool_texture_map_070242F0,
 };
 
-UNUSED static const u64 hmc_unused_0 = 0;
-
-
 // 0x07024CE0 - 0x070254E0
 ALIGNED8 static const Texture hmc_seg7_texture_07024CE0[] = {
 #include "levels/hmc/7.rgba16.inc.c"
@@ -525,7 +522,7 @@ struct Painting cotmc_painting = {
     /* id */ 0x000E,
     /* Image Count */ 0x01,
     /* Texture Type */ PAINTING_ENV_MAP,
-    /* Floor Status */ 0x00, 0x00 , 0x00 /* which of the painting's nearby special floors Mario's on */,
+    /* Floor Status */ 0x00, 0x00, 0x00 /* which of the painting's nearby special floors Mario's on */,
     /* Ripple Status */ 0x00,
     /* Rotation */ 270.0f,  0.0f,
     /* Position */ 2989.055908f, -4485.120117f, 5135.359863f,

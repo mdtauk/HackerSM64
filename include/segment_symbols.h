@@ -6,13 +6,19 @@
     extern u8 _##name##SegmentRomStart[]; \
     extern u8 _##name##SegmentRomEnd[];
 
+#define DECLARE_NOLOAD(name) \
+    extern u8 _##name##SegmentBssStart[]; \
+    extern u8 _##name##SegmentBssEnd[];
+
 #define DECLARE_ACTOR_SEGMENT(name) \
     DECLARE_SEGMENT(name##_mio0) \
     DECLARE_SEGMENT(name##_yay0) \
-    DECLARE_SEGMENT(name##_geo)
+    DECLARE_SEGMENT(name##_geo) \
+    DECLARE_NOLOAD(name##_geo)
 
 #define DECLARE_LEVEL_SEGMENT(name) \
     DECLARE_SEGMENT(name) \
+    DECLARE_NOLOAD(name) \
     DECLARE_SEGMENT(name##_segment_7)
 
 DECLARE_ACTOR_SEGMENT(common0)
@@ -39,6 +45,7 @@ DECLARE_ACTOR_SEGMENT(group17)
 DECLARE_SEGMENT(entry)
 DECLARE_SEGMENT(engine)
 DECLARE_SEGMENT(behavior)
+DECLARE_NOLOAD(behavior)
 DECLARE_SEGMENT(scripts)
 DECLARE_SEGMENT(goddard)
 DECLARE_SEGMENT(framebuffers)
@@ -98,7 +105,7 @@ DECLARE_SEGMENT(translation_en_yay0)
 DECLARE_SEGMENT(translation_fr_yay0)
 #endif
 
-//added for compatibility
+// added for compatibility
 DECLARE_SEGMENT(segment2_mio0)
 
 DECLARE_SEGMENT(water_skybox_mio0)

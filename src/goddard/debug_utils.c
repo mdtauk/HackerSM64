@@ -153,9 +153,7 @@ void remove_all_memtrackers(void) {
         sMemTrackers[i].total = 0.0f;
     }
 
-#ifdef AVOID_UB
     sNumActiveMemTrackers = 0;
-#endif
 }
 
 /**
@@ -441,7 +439,6 @@ void print_stack_trace(void) {
  */
 void fatal_printf(const char *fmt, ...) {
     char cur;
-    UNUSED u8 filler[4];
     va_list vl;
 
     va_start(vl, fmt);
@@ -459,11 +456,7 @@ void fatal_printf(const char *fmt, ...) {
                         gd_printf("%s", va_arg(vl, char *));
                         break;
                     case 'c':
-#ifdef AVOID_UB
                         gd_printf("%c", (char)va_arg(vl, int));
-#else
-                        gd_printf("%c", va_arg(vl, char));
-#endif
                         break;
                     case 'x':
                         gd_printf("%x", va_arg(vl, s32));
@@ -528,13 +521,11 @@ void imout(void) {
  * TODO: figure out type of rng generator?
  */
 f32 gd_rand_float(void) {
-    u32 temp;
     u32 i;
-    f32 val;
 
     for (i = 0; i < 4; i++) {
         if (sPrimarySeed & 0x80000000) {
-            sPrimarySeed = sPrimarySeed << 1 | 1;
+            sPrimarySeed = ((sPrimarySeed << 1) | 1);
         } else {
             sPrimarySeed <<= 1;
         }
@@ -542,15 +533,13 @@ f32 gd_rand_float(void) {
     sPrimarySeed += 4;
 
     /* Seed Switch */
-    if ((sPrimarySeed ^= gd_get_ostime()) & 1) {
-        temp = sPrimarySeed;
+    if ((sPrimarySeed ^= gd_get_ostime()) & 0x1) {
+        u32 temp = sPrimarySeed;
         sPrimarySeed = sSecondarySeed;
         sSecondarySeed = temp;
     }
 
-    val = (sPrimarySeed & 0xFFFF) / 65535.0; // 65535.0f
-
-    return val;
+    return (sPrimarySeed & 0xFFFF) / 65535.0f;
 }
 
 /**
@@ -567,9 +556,9 @@ s32 gd_atoi(const char *str) {
         cur = *str++;
 
         // Each character must be either a digit or a minus sign
-        if ((cur < '0' || cur > '9') && (cur != '-'))
+        if ((cur < '0' || cur > '9') && (cur != '-')) {
             fatal_printf("gd_atoi() bad number '%s'", origstr);
-
+        }
         if (cur == '-') {
             isNegative = TRUE;
         } else {
@@ -673,13 +662,10 @@ static s32 int_sci_notation(s32 base, s32 significand) {
 char *sprint_val_withspecifiers(char *str, union PrintVal val, char *specifiers) {
     s32 fracPart; // sp3C
     s32 intPart;  // sp38
-    s32 intPrec;  // sp34
-    s32 fracPrec; // sp30
-    UNUSED u8 filler[4];
     char cur; // sp2B
 
-    fracPrec = 6;
-    intPrec = 6;
+    s32 fracPrec = 6;
+    s32 intPrec = 6;
 
     while ((cur = *specifiers++)) {
         if (cur == 'd') {
@@ -732,9 +718,7 @@ void ascii_to_uppercase(char *str) {
 
 /* 23C52C -> 23C5A8; orig name: func_8018DD5C */
 char *gd_strdup(const char *src) {
-    char *dst; // sp24
-
-    dst = gd_malloc_perm((gd_strlen(src) + 1) * sizeof(char));
+    char *dst = gd_malloc_perm((gd_strlen(src) + 1) * sizeof(char));
 
     if (dst == NULL) {
         fatal_printf("gd_strdup(): out of memory");
@@ -780,7 +764,7 @@ s32 gd_str_not_equal(const char *str1, const char *str2) {
         }
     }
 
-    return *str1 != '\0' || *str2 != '\0';
+    return ((*str1 != '\0') || (*str2 != '\0'));
 }
 
 /* 23C728 -> 23C7B8; orig name; func_8018DF58 */
@@ -798,12 +782,12 @@ s32 gd_str_contains(const char *str1, const char *str2) {
 
 /* 23C7B8 -> 23C7DC; orig name: func_8018DFE8 */
 s32 gd_feof(struct GdFile *f) {
-    return f->flags & 0x4;
+    return (f->flags & (1 << 2));
 }
 
 /* 23C7DC -> 23C7FC; orig name: func_8018E00C */
 void gd_set_feof(struct GdFile *f) {
-    f->flags |= 0x4;
+    f->flags |= (1 << 2);
 }
 
 /* 23C7FC -> 23CA0C */
@@ -811,13 +795,11 @@ struct GdFile *gd_fopen(const char *filename, const char *mode) {
     struct GdFile *f; // sp74
     char *loadedname; // sp70
     u32 i;            // sp6C
-    UNUSED u8 filler[4];
     struct UnkBufThing buf; // sp24
     u8 *bufbytes;           // sp20
     u8 *fileposptr;         // sp1C
-    s32 filecsr;            // sp18
 
-    filecsr = 0;
+    s32 filecsr = 0;
 
     while (TRUE) {
         bufbytes = (u8 *) &buf;
@@ -852,10 +834,10 @@ struct GdFile *gd_fopen(const char *filename, const char *mode) {
     f->size = buf.size;
     f->pos = f->flags = 0;
     if (gd_str_contains(mode, "w")) {
-        f->flags |= 0x1;
+        f->flags |= (1 << 0);
     }
     if (gd_str_contains(mode, "b")) {
-        f->flags |= 0x2;
+        f->flags |= (1 << 1);
     }
 
     return f;
@@ -902,7 +884,6 @@ s32 is_newline(char c) {
 s32 gd_fread_line(char *buf, u32 size, struct GdFile *f) {
     signed char c;
     u32 pos = 0;
-    UNUSED u8 filler[4];
 
     do {
         if (gd_fread(&c, 1, 1, f) == -1) {

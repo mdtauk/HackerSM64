@@ -44,9 +44,8 @@ s16 *read_vec3s(Vec3s dst, s16 *src) {
 }
 
 /**
- * Takes a pointer to three angles in degrees (supplied by a geo layout script)
- * and converts it to a vector of three in-game angle units in [-32768, 32767]
- * range.
+ * Takes a pointer to three angles in degrees (supplied by a geo layout script) and
+ * converts it to a vector of three in-game angle units in [-32768, 32767] range.
  */
 s16 *read_vec3s_angle(Vec3s dst, s16 *src) {
     dst[0] = (next_s16_in_geo_script(&src) << 15) / 180;
@@ -70,8 +69,7 @@ void register_scene_graph_node(struct GraphNode *graphNode) {
             }
         } else {
             if (gCurGraphNodeList[gCurGraphNodeIndex - 1]->type == GRAPH_NODE_TYPE_OBJECT_PARENT) {
-                ((struct GraphNodeObjectParent *) gCurGraphNodeList[gCurGraphNodeIndex - 1])
-                    ->sharedChild = graphNode;
+                ((struct GraphNodeObjectParent *) gCurGraphNodeList[gCurGraphNodeIndex - 1])->sharedChild = graphNode;
             } else {
                 geo_add_child(gCurGraphNodeList[gCurGraphNodeIndex - 1], graphNode);
             }

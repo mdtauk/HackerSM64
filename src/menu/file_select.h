@@ -6,12 +6,17 @@
 
 #include "types.h"
 
-#define MENU_LAYER_MAIN 1
-#define MENU_LAYER_SUBMENU 2
+enum MenuLayers {
+    MENU_LAYER_NONE,
+    MENU_LAYER_MAIN,
+    MENU_LAYER_SUBMENU
+};
 
-#define MENU_ERASE_HOVER_NONE 0
-#define MENU_ERASE_HOVER_YES 1
-#define MENU_ERASE_HOVER_NO 2
+enum MenuEraseButtonHoverStates {
+    MENU_ERASE_HOVER_NONE,
+    MENU_ERASE_HOVER_YES,
+    MENU_ERASE_HOVER_NO
+};
 
 enum MainMenuButtonStates {
     MENU_BUTTON_STATE_DEFAULT,
@@ -78,7 +83,7 @@ enum MenuButtonTypes {
     MENU_BUTTON_MONO,
     MENU_BUTTON_HEADSET,
 
-#ifdef VERSION_EU
+#if MULTILANG
     // Language Menu
     MENU_BUTTON_LANGUAGE_MIN,
     MENU_BUTTON_LANGUAGE_ENGLISH = MENU_BUTTON_LANGUAGE_MIN,

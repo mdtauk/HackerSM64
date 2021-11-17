@@ -5,9 +5,6 @@
 
 #include "gd_types.h"
 
-// bss
-extern s32 sResetWeightVtxNum;
-
 // functions
 void eye_joint_update_func(struct ObjJoint *self);
 struct ObjJoint *make_joint(s32 flags, f32 x, f32 y, f32 z);
@@ -22,10 +19,7 @@ void func_801911A8(struct ObjJoint *j);
 void func_80191220(struct ObjJoint *j);
 void func_801913C0(struct ObjJoint *j);
 void func_801913F0(struct ObjJoint *j);
-void stub_joints_2(struct ObjJoint *j);
 void reset_joint(struct ObjJoint *j);
-void func_80191824(struct ObjJoint *j);
-void func_80191E88(struct ObjGroup *grp);
 void reset_joint_counts(void);
 
 #endif // GD_JOINTS_H

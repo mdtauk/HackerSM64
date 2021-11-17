@@ -3,7 +3,7 @@
  * Behavior for bhvAlphaBooKey and bhvBetaBooKey.
  * They were apparently intended to be a key that would be contained in boos
  * and would fall out, like coins do. There is a model, MODEL_BETA_BOO_KEY, that
- * is loaded in script_func_global_10, which contains boo-themed models used in
+ * is loaded in script_func_global_group9, which contains boo-themed models used in
  * BBH and the castle courtyard. It is used in a macro preset with bhvAlphaBooKey,
  * which is also grouped near other boo/BBH-related macros. This is evidence that
  * bhvAlphaBooKey was supposed to be a key. bhvBetaBooKey has code similar to
@@ -40,7 +40,7 @@ void bhv_alpha_boo_key_loop(void) {
 
         // Delete the object and spawn sparkles
         obj_mark_for_deletion(o);
-        spawn_object(o, MODEL_SPARKLES, bhvGoldenCoinSparkles);
+        spawn_object(o, MODEL_SPARKLES, bhvCoinSparklesSpawner);
     }
 }
 
@@ -95,11 +95,11 @@ static void beta_boo_key_dropped_loop(void) {
             // One theory about this code is that there was a boo spawner, which
             // spawned "false" boos and one "true" boo with the key, and the player
             // was intended to find the one with the key to progress.
-            o->parentObj->oInteractStatus = TRUE;
+            o->parentObj->oInteractStatus = TRUE; //! Note: Not a flag, treated as a TRUE/FALSE statement
 
             // Delete the object and spawn sparkles
             obj_mark_for_deletion(o);
-            spawn_object(o, MODEL_SPARKLES, bhvGoldenCoinSparkles);
+            spawn_object(o, MODEL_SPARKLES, bhvCoinSparklesSpawner);
         }
     }
 }
@@ -164,7 +164,7 @@ static void beta_boo_key_inside_boo_loop(void) {
     o->oFaceAngleYaw += 0x200;
 }
 
-static void (*sBetaBooKeyActions[])(void) = {
+static ObjActionFunc sBetaBooKeyActions[] = {
     beta_boo_key_inside_boo_loop,
     beta_boo_key_drop,
     beta_boo_key_dropped_loop,

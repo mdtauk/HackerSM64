@@ -6,7 +6,7 @@ void water_level_pillar_undrained(void) {
     switch (o->oAction) {
         case 0:
             if (cur_obj_is_mario_ground_pounding_platform()) {
-                o->oAction++;
+                o->oAction = 1;
                 spawn_mist_particles();
             }
             break;
@@ -15,7 +15,7 @@ void water_level_pillar_undrained(void) {
             if (o->oTimer < 4) {
                 o->oPosY -= 20.0f;
             } else {
-                o->oAction++;
+                o->oAction = 2;
             }
             break;
 
@@ -23,7 +23,7 @@ void water_level_pillar_undrained(void) {
             otherWaterPillar = cur_obj_nearest_object_with_behavior(bhvWaterLevelPillar);
             if (otherWaterPillar != NULL) {
                 if (otherWaterPillar->oAction < 2) {
-                    o->oAction++;
+                    o->oAction = 3;
                 }
             }
             break;
@@ -32,7 +32,7 @@ void water_level_pillar_undrained(void) {
             otherWaterPillar = cur_obj_nearest_object_with_behavior(bhvWaterLevelPillar);
             if (otherWaterPillar != NULL) {
                 if (otherWaterPillar->oAction > 1) {
-                    o->oAction++;
+                    o->oAction = 4;
                     save_file_set_flags(SAVE_FLAG_MOAT_DRAINED);
                     play_puzzle_jingle();
                 }
@@ -42,15 +42,13 @@ void water_level_pillar_undrained(void) {
         case 4:
             cur_obj_play_sound_1(SOUND_ENV_WATER_DRAIN);
             if (o->oTimer < 300) {
-                gEnvironmentLevels[2] =
-                    (s32) approach_f32_symmetric(gEnvironmentLevels[2], -2450.0f, 5.0f);
-                gEnvironmentLevels[0] =
-                    (s32) approach_f32_symmetric(gEnvironmentLevels[0], -2450.0f, 5.0f);
+                gEnvironmentLevels[2] = (s32) approach_f32_symmetric(gEnvironmentLevels[2], -2450.0f, 5.0f);
+                gEnvironmentLevels[0] = (s32) approach_f32_symmetric(gEnvironmentLevels[0], -2450.0f, 5.0f);
 #if ENABLE_RUMBLE
-                reset_rumble_timers_2(2);
+                reset_rumble_timers_vibrate(2);
 #endif
             } else {
-                o->oAction++;
+                o->oAction = 5;
             }
             break;
 

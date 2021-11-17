@@ -4,6 +4,7 @@
 #include "debug.h"
 #include "engine/behavior_script.h"
 #include "engine/surface_collision.h"
+#include "engine/math_util.h"
 #include "game_init.h"
 #include "main.h"
 #include "object_constants.h"
@@ -14,10 +15,14 @@
 #include "sm64.h"
 #include "types.h"
 
-#define DEBUG_INFO_NOFLAGS (0 << 0)
-#define DEBUG_INFO_FLAG_DPRINT (1 << 0)
-#define DEBUG_INFO_FLAG_LSELECT (1 << 1)
-#define DEBUG_INFO_FLAG_ALL 0xFF
+#ifdef VANILLA_DEBUG
+
+enum DebugInfoFlags {
+    DEBUG_INFO_NOFLAGS      = (0 << 0),
+    DEBUG_INFO_FLAG_DPRINT  = (1 << 0),
+    DEBUG_INFO_FLAG_LSELECT = (1 << 1),
+    DEBUG_INFO_FLAG_ALL     = 0xFF
+};
 
 s16 gDebugPrintState1[6]; // prints top-down?
 s16 gDebugPrintState2[6]; // prints bottom-up?
@@ -33,58 +38,61 @@ enum DebugPrintStateInfo {
 
 // DEBUG_SYS_EFFECTINFO
 const char *sDebugEffectStringInfo[] = {
-    "  a0 %d", "  a1 %d", "  a2 %d", "  a3 %d", "  a4 %d", "  a5 %d", "  a6 %d", "  a7 %d",
+    "  a0 %d",
+    "  a1 %d",
+    "  a2 %d",
+    "  a3 %d",
+    "  a4 %d",
+    "  a5 %d",
+    "  a6 %d",
+    "  a7 %d",
     "A" // cursor
 };
 
 // DEBUG_SYS_ENEMYINFO
 const char *sDebugEnemyStringInfo[] = {
-    "  b0 %d", "  b1 %d", "  b2 %d", "  b3 %d", "  b4 %d", "  b5 %d", "  b6 %d", "  b7 %d",
+    "  b0 %d",
+    "  b1 %d",
+    "  b2 %d",
+    "  b3 %d",
+    "  b4 %d",
+    "  b5 %d",
+    "  b6 %d",
+    "  b7 %d",
     "B" // cursor
 };
 
-s32 sDebugInfoDPadMask = 0;
-s32 sDebugInfoDPadUpdID = 0;
-s8 sDebugLvSelectCheckFlag = FALSE;
+s32 sDebugInfoDPadMask      = 0;
+s32 sDebugInfoDPadUpdID     = 0;
+s8  sDebugLvSelectCheckFlag = FALSE;
 
 #define DEBUG_PAGE_MIN DEBUG_PAGE_OBJECTINFO
 #define DEBUG_PAGE_MAX DEBUG_PAGE_ENEMYINFO
 
-s8 sDebugPage = DEBUG_PAGE_MIN;
-s8 sNoExtraDebug = FALSE;
-s8 sDebugStringArrPrinted = FALSE;
-s8 sDebugSysCursor = 0;
-s8 sDebugInfoButtonSeqID = 0;
-s16 sDebugInfoButtonSeq[] = { U_CBUTTONS, L_CBUTTONS, D_CBUTTONS, R_CBUTTONS, -1 };
-
-// most likely present in an ifdef DEBUG build. TODO: check DD version?
-void stub_debug_1(void) {
-}
-
-void stub_debug_2(void) {
-}
-
-void stub_debug_3(void) {
-}
-
-void stub_debug_4(void) {
-}
+s8  sDebugPage             = DEBUG_PAGE_MIN;
+s8  sNoExtraDebug          = FALSE;
+s8  sDebugStringArrPrinted = FALSE;
+s8  sDebugSysCursor        = 0;
+s8  sDebugInfoButtonSeqID  = 0;
+s16 sDebugInfoButtonSeq[]  = {
+    U_CBUTTONS,
+    L_CBUTTONS,
+    D_CBUTTONS,
+    R_CBUTTONS,
+    -1
+};
 
 /*
  * These 2 functions are called from the object list processor in regards to cycle
  * counts. They likely have stubbed out code that calculated the clock count and
  * its difference for consecutive calls.
  */
-s64 get_current_clock(void) {
-    s64 wtf = 0;
-
-    return wtf;
+UNUSED s64 get_current_clock(void) {
+    return 0;
 }
 
-s64 get_clock_difference(UNUSED s64 cycles) {
-    s64 wtf = 0;
-
-    return wtf;
+UNUSED s64 get_clock_difference(UNUSED s64 cycles) {
+    return 0;
 }
 
 /*
@@ -92,8 +100,7 @@ s64 get_clock_difference(UNUSED s64 cycles) {
  * information. Note the reset of the printing boolean. For all intenses and
  * purposes this creates/formats a new print state.
  */
-void set_print_state_info(s16 *printState, s16 xCursor, s16 yCursor, s16 minYCursor, s16 maxXCursor,
-                          s16 lineYOffset) {
+void set_print_state_info(s16 *printState, s16 xCursor, s16 yCursor, s16 minYCursor, s16 maxXCursor, s16 lineYOffset) {
     printState[DEBUG_PSTATE_DISABLED] = FALSE;
     printState[DEBUG_PSTATE_X_CURSOR] = xCursor;
     printState[DEBUG_PSTATE_Y_CURSOR] = yCursor;
@@ -109,14 +116,14 @@ void set_print_state_info(s16 *printState, s16 xCursor, s16 yCursor, s16 minYCur
  */
 void print_text_array_info(s16 *printState, const char *str, s32 number) {
     if (!printState[DEBUG_PSTATE_DISABLED]) {
-        if ((printState[DEBUG_PSTATE_Y_CURSOR] < printState[DEBUG_PSTATE_MIN_Y_CURSOR])
-            || (printState[DEBUG_PSTATE_MAX_X_CURSOR] < printState[DEBUG_PSTATE_Y_CURSOR])) {
+        if ((printState[DEBUG_PSTATE_Y_CURSOR    ] < printState[DEBUG_PSTATE_MIN_Y_CURSOR])
+         || (printState[DEBUG_PSTATE_MAX_X_CURSOR] < printState[DEBUG_PSTATE_Y_CURSOR    ])) {
             print_text(printState[DEBUG_PSTATE_X_CURSOR], printState[DEBUG_PSTATE_Y_CURSOR],
                        "DPRINT OVER");
-            printState[DEBUG_PSTATE_DISABLED]++; // why not just = TRUE...
+            printState[DEBUG_PSTATE_DISABLED] = TRUE;
         } else {
-            print_text_fmt_int(printState[DEBUG_PSTATE_X_CURSOR], printState[DEBUG_PSTATE_Y_CURSOR],
-                               str, number);
+            print_text_fmt_int(printState[DEBUG_PSTATE_X_CURSOR],
+                               printState[DEBUG_PSTATE_Y_CURSOR], str, number);
             printState[DEBUG_PSTATE_Y_CURSOR] += printState[DEBUG_PSTATE_LINE_Y_OFFSET];
         }
     }
@@ -124,10 +131,8 @@ void print_text_array_info(s16 *printState, const char *str, s32 number) {
 
 void set_text_array_x_y(s32 xOffset, s32 yOffset) {
     s16 *printState = gDebugPrintState1;
-
     printState[DEBUG_PSTATE_X_CURSOR] += xOffset;
-    printState[DEBUG_PSTATE_Y_CURSOR] =
-        yOffset * printState[DEBUG_PSTATE_LINE_Y_OFFSET] + printState[DEBUG_PSTATE_Y_CURSOR];
+    printState[DEBUG_PSTATE_Y_CURSOR] = ((yOffset * printState[DEBUG_PSTATE_LINE_Y_OFFSET]) + printState[DEBUG_PSTATE_Y_CURSOR]);
 }
 
 /*
@@ -165,26 +170,18 @@ void print_debug_top_down_normal(const char *str, s32 number) {
 void print_mapinfo(void) {
     // EU mostly stubbed this function out.
     struct Surface *pfloor;
-    UNUSED f32 bgY;   // unused in EU
-    UNUSED f32 water; // unused in EU
-    UNUSED s32 area;  // unused in EU
-    UNUSED s32 angY;  // unused in EU
 
-    angY = gCurrentObject->oMoveAngleYaw / 182.044000;
-    area = ((s32) gCurrentObject->oPosX + 0x2000) / 1024
-           + ((s32) gCurrentObject->oPosZ + 0x2000) / 1024 * 16;
+    s32 angY = (gCurrentObject->oMoveAngleYaw / DEGREES(1.0f));
+    s32 area = ( (((s32) gCurrentObject->oPosX + 0x2000) / 1024)
+             +  ((((s32) gCurrentObject->oPosZ + 0x2000) / 1024) * 16));
 
-    bgY = find_floor(gCurrentObject->oPosX, gCurrentObject->oPosY, gCurrentObject->oPosZ, &pfloor);
-    water = find_water_level(gCurrentObject->oPosX, gCurrentObject->oPosZ);
+    f32 bgY   = find_floor(gCurrentObject->oPosX, gCurrentObject->oPosY, gCurrentObject->oPosZ, &pfloor);
+    f32 water = find_water_level(gCurrentObject->oPosX, gCurrentObject->oPosZ);
 
     print_debug_top_down_normal("mapinfo", 0);
-#ifndef VERSION_EU
     print_debug_top_down_mapinfo("area %x", area);
     print_debug_top_down_mapinfo("wx   %d", gCurrentObject->oPosX);
-    //! Fat finger: programmer hit tab instead of space. Japanese
-    // thumb shift keyboards had the tab key next to the spacebar,
-    // so this was likely the reason.
-    print_debug_top_down_mapinfo("wy\t  %d", gCurrentObject->oPosY);
+    print_debug_top_down_mapinfo("wy   %d", gCurrentObject->oPosY);
     print_debug_top_down_mapinfo("wz   %d", gCurrentObject->oPosZ);
     print_debug_top_down_mapinfo("bgY  %d", bgY);
     print_debug_top_down_mapinfo("angY %d", angY);
@@ -198,7 +195,6 @@ void print_mapinfo(void) {
     if (gCurrentObject->oPosY < water) {
         print_debug_top_down_mapinfo("water %d", water);
     }
-#endif
 }
 
 void print_checkinfo(void) {
@@ -223,7 +219,7 @@ void print_string_array_info(const char **strArr) {
     s32 i;
 
     if (!sDebugStringArrPrinted) {
-        sDebugStringArrPrinted++; // again, why not = TRUE...
+        sDebugStringArrPrinted = TRUE;
         for (i = 0; i < 8; i++) {
             // sDebugPage is assumed to be 4 or 5 here.
             print_debug_top_down_mapinfo(strArr[i], gDebugInfo[sDebugPage][i]);
@@ -271,7 +267,7 @@ void update_debug_dpadmask(void) {
 
 void debug_unknown_level_select_check(void) {
     if (!sDebugLvSelectCheckFlag) {
-        sDebugLvSelectCheckFlag++; // again, just do = TRUE...
+        sDebugLvSelectCheckFlag = TRUE;
 
         if (!gDebugLevelSelect) {
             gDebugInfoFlags = DEBUG_INFO_NOFLAGS;
@@ -290,9 +286,6 @@ void reset_debug_objectinfo(void) {
     gUnknownWallCount = 0;
     gObjectCounter = 0;
     sDebugStringArrPrinted = FALSE;
-    D_8035FEE2 = 0;
-    D_8035FEE4 = 0;
-
     set_print_state_info(gDebugPrintState1, 20, 185, 40, 200, -15);
     set_print_state_info(gDebugPrintState2, 180, 30, 0, 150, 15);
     update_debug_dpadmask();
@@ -305,12 +298,12 @@ void reset_debug_objectinfo(void) {
  */
 UNUSED static void check_debug_button_seq(void) {
     s16 *buttonArr = sDebugInfoButtonSeq;
-    s16 cButtonMask;
 
     if (!(gPlayer1Controller->buttonDown & L_TRIG)) {
         sDebugInfoButtonSeqID = 0;
     } else {
-        if ((s16)(cButtonMask = (gPlayer1Controller->buttonPressed & C_BUTTONS))) {
+        s16 cButtonMask = (gPlayer1Controller->buttonPressed & C_BUTTONS);
+        if (cButtonMask) {
             if (buttonArr[sDebugInfoButtonSeqID] == cButtonMask) {
                 sDebugInfoButtonSeqID++;
                 if (buttonArr[sDebugInfoButtonSeqID] == -1) {
@@ -360,15 +353,15 @@ UNUSED static void try_change_debug_page(void) {
 UNUSED static
 #endif
 void try_modify_debug_controls(void) {
-    s32 sp4;
+    s32 modifier;
 
     if (gPlayer1Controller->buttonPressed & Z_TRIG) {
         sNoExtraDebug ^= 1;
     }
     if (!(gPlayer1Controller->buttonDown & (L_TRIG | R_TRIG)) && !sNoExtraDebug) {
-        sp4 = 1;
+        modifier = 1;
         if (gPlayer1Controller->buttonDown & B_BUTTON) {
-            sp4 = 100;
+            modifier = 100;
         }
 
         if (sDebugInfoDPadMask & U_JPAD) {
@@ -393,18 +386,18 @@ void try_modify_debug_controls(void) {
                 gDebugInfo[sDebugPage][sDebugSysCursor] =
                     gDebugInfoOverwrite[sDebugPage][sDebugSysCursor];
             } else {
-                gDebugInfo[sDebugPage][sDebugSysCursor] = gDebugInfo[sDebugPage][sDebugSysCursor] - sp4;
+                gDebugInfo[sDebugPage][sDebugSysCursor] = gDebugInfo[sDebugPage][sDebugSysCursor] - modifier;
             }
         }
 
         if (sDebugInfoDPadMask & R_JPAD) {
-            gDebugInfo[sDebugPage][sDebugSysCursor] = gDebugInfo[sDebugPage][sDebugSysCursor] + sp4;
+            gDebugInfo[sDebugPage][sDebugSysCursor] = gDebugInfo[sDebugPage][sDebugSysCursor] + modifier;
         }
     }
 }
 
 // possibly a removed debug control (TODO: check DD)
-void stub_debug_5(void) {
+void stub_debug_control(void) {
 }
 
 /*
@@ -438,11 +431,14 @@ void try_print_debug_mario_object_info(void) {
     if (gUnknownWallCount != 0) {
         print_debug_bottom_up("WALL   %d", gUnknownWallCount);
     }
+
+    // gNumCalls.floor = 0;
+    // gNumCalls.ceil  = 0;
+    // gNumCalls.wall  = 0;
 }
 
 /*
- * Similar to above, but with level information. (checkinfo, mapinfo,
- * stageinfo)
+ * Similar to above, but with level information. (checkinfo, mapinfo, stageinfo)
  */
 void try_print_debug_mario_level_info(void) {
     switch (sDebugPage) {
@@ -471,19 +467,15 @@ void try_print_debug_mario_level_info(void) {
  * [5][7] (b7 in the string array) to 1 to enable debug spawn.
  */
 void try_do_mario_debug_object_spawn(void) {
-    UNUSED u8 filler[4];
-
     if (sDebugPage == DEBUG_PAGE_STAGEINFO && gDebugInfo[DEBUG_PAGE_ENEMYINFO][7] == 1) {
         if (gPlayer1Controller->buttonPressed & R_JPAD) {
             spawn_object_relative(0, 0, 100, 200, gCurrentObject, MODEL_KOOPA_SHELL, bhvKoopaShell);
         }
         if (gPlayer1Controller->buttonPressed & L_JPAD) {
-            spawn_object_relative(0, 0, 100, 200, gCurrentObject, MODEL_BREAKABLE_BOX_SMALL,
-                                  bhvJumpingBox);
+            spawn_object_relative(0, 0, 100, 200, gCurrentObject, MODEL_BREAKABLE_BOX, bhvJumpingBox);
         }
         if (gPlayer1Controller->buttonPressed & D_JPAD) {
-            spawn_object_relative(0, 0, 100, 200, gCurrentObject, MODEL_KOOPA_SHELL,
-                                  bhvKoopaShellUnderwater);
+            spawn_object_relative(0, 0, 100, 200, gCurrentObject, MODEL_KOOPA_SHELL, bhvKoopaShellUnderwater);
         }
     }
 }
@@ -529,3 +521,5 @@ void debug_enemy_unknown(s16 *enemyArr) {
     enemyArr[6] = gDebugInfo[DEBUG_PAGE_ENEMYINFO][3];
     enemyArr[7] = gDebugInfo[DEBUG_PAGE_ENEMYINFO][4];
 }
+
+#endif

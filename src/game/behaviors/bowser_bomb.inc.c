@@ -1,7 +1,7 @@
 // bowser_bomb.inc.c
 
 void bhv_bowser_bomb_loop(void) {
-    if (obj_check_if_collided_with_object(o, gMarioObject) == TRUE) {
+    if (obj_check_if_collided_with_object(o, gMarioObject)) {
         o->oInteractStatus &= ~INT_STATUS_INTERACTED;
         spawn_object(o, MODEL_EXPLOSION, bhvExplosion);
         o->activeFlags = ACTIVE_FLAG_DEACTIVATED;
@@ -18,28 +18,25 @@ void bhv_bowser_bomb_loop(void) {
 }
 
 void bhv_bowser_bomb_explosion_loop(void) {
-    cur_obj_scale((f32) o->oTimer / 14.0f * 9.0 + 1.0);
-
-    if ((o->oTimer % 4 == 0) && (o->oTimer < 20)) {
+    cur_obj_scale((f32) o->oTimer / 14.0f * 9.0f + 1.0f);
+    if (!(o->oTimer & 0x3) && (o->oTimer < 20)) {
         struct Object *mineSmoke = spawn_object(o, MODEL_BOWSER_SMOKE, bhvBowserBombSmoke);
         mineSmoke->oPosX += random_float() * 600.0f - 400.0f;
         mineSmoke->oPosZ += random_float() * 600.0f - 400.0f;
         mineSmoke->oVelY += random_float() * 10.0f;
     }
 
-    if (o->oTimer % 2 == 0) {
+    if (!(o->oTimer & 0x1)) {
         o->oAnimState++;
     }
-
     if (o->oTimer == 28) {
         o->activeFlags = ACTIVE_FLAG_DEACTIVATED;
     }
 }
 
 void bhv_bowser_bomb_smoke_loop(void) {
-    cur_obj_scale((f32) o->oTimer / 14.0f * 9.0 + 1.0);
-
-    if (o->oTimer % 2 == 0) {
+    cur_obj_scale(((f32) o->oTimer / 14.0f * 9.0f) + 1.0f);
+    if (!(o->oTimer & 0x1)) {
         o->oAnimState++;
     }
 

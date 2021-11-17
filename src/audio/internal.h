@@ -24,49 +24,42 @@
 
 #define NO_LAYER ((struct SequenceChannelLayer *)(-1))
 
-#define MUTE_BEHAVIOR_STOP_SCRIPT 0x80 // stop processing sequence/channel scripts
-#define MUTE_BEHAVIOR_STOP_NOTES 0x40  // prevent further notes from playing
-#define MUTE_BEHAVIOR_SOFTEN 0x20      // lower volume, by default to half
+enum MuteBehaviors {
+    MUTE_BEHAVIOR_STOP_SCRIPT = (1 << 7), // 0x80 // stop processing sequence/channel scripts
+    MUTE_BEHAVIOR_STOP_NOTES  = (1 << 6), // 0x40 // prevent further notes from playing
+    MUTE_BEHAVIOR_SOFTEN      = (1 << 5), // 0x20 // lower volume, by default to half
+};
 
-#define SEQUENCE_PLAYER_STATE_0 0
-#define SEQUENCE_PLAYER_STATE_FADE_OUT 1
-#define SEQUENCE_PLAYER_STATE_2 2
-#define SEQUENCE_PLAYER_STATE_3 3
-#define SEQUENCE_PLAYER_STATE_4 4
+enum SequencePlayerStates {
+    SEQUENCE_PLAYER_STATE_0,
+    SEQUENCE_PLAYER_STATE_FADE_OUT,
+    SEQUENCE_PLAYER_STATE_2,
+    SEQUENCE_PLAYER_STATE_3,
+    SEQUENCE_PLAYER_STATE_4
+};
 
-#define NOTE_PRIORITY_DISABLED 0
-#define NOTE_PRIORITY_STOPPING 1
-#define NOTE_PRIORITY_MIN 2
-#define NOTE_PRIORITY_DEFAULT 3
+enum NotePriority {
+    NOTE_PRIORITY_DISABLED,
+    NOTE_PRIORITY_STOPPING,
+    NOTE_PRIORITY_MIN,
+    NOTE_PRIORITY_DEFAULT
+};
 
 #define TATUMS_PER_BEAT 48
 
 // abi.h contains more details about the ADPCM and S8 codecs, "skip" skips codec processing
-#define CODEC_ADPCM 0
-#define CODEC_S8 1
-#define CODEC_SKIP 2
+enum Codecs {
+    CODEC_ADPCM,
+    CODEC_S8,
+    CODEC_SKIP
+};
 
-#ifdef VERSION_JP
-#define TEMPO_SCALE 1
-#else
 #define TEMPO_SCALE TATUMS_PER_BEAT
-#endif
-
-// TODO: US_FLOAT should probably be renamed to JP_DOUBLE since eu seems to use floats too
-#ifdef VERSION_JP
-#define US_FLOAT(x) x
-#else
-#define US_FLOAT(x) x ## f
-#endif
 
 // Convert u8 or u16 to f32. On JP, this uses a u32->f32 conversion,
 // resulting in more bloated codegen, while on US it goes through s32.
 // Since u8 and u16 fit losslessly in both, behavior is the same.
-#ifdef VERSION_JP
-#define FLOAT_CAST(x) (f32) (x)
-#else
 #define FLOAT_CAST(x) (f32) (s32) (x)
-#endif
 
 #if defined(ISVPRINT) || defined(UNF)
 #define stubbed_printf osSyncPrintf
@@ -84,11 +77,20 @@
 #endif
 #endif
 
+#include "game/puppyprint.h"
+
 #ifdef VERSION_EU
+/*#if PUPPYPRINT_DEBUG
+#define eu_stubbed_printf_0(msg) append_puppyprint_log(msg)
+#define eu_stubbed_printf_1(msg, a) append_puppyprint_log(msg, a)
+#define eu_stubbed_printf_2(msg, a, b) append_puppyprint_log(msg, a, b)
+#define eu_stubbed_printf_3(msg, a, b, c) append_puppyprint_log(msg, a, b, c)
+#else*/
 #define eu_stubbed_printf_0(msg) stubbed_printf(msg)
 #define eu_stubbed_printf_1(msg, a) stubbed_printf(msg, a)
 #define eu_stubbed_printf_2(msg, a, b) stubbed_printf(msg, a, b)
 #define eu_stubbed_printf_3(msg, a, b, c) stubbed_printf(msg, a, b, c)
+//#endif
 #else
 #define eu_stubbed_printf_0(msg)
 #define eu_stubbed_printf_1(msg, a)
@@ -580,18 +582,18 @@ struct NotePlaybackState {
     /*0x84, 0x5C,     */ struct VibratoState vibratoState;
 };
 struct NoteSubEu {
-    /*0x00*/ volatile u8 enabled : 1;
-    /*0x00*/ u8 needsInit : 1;
-    /*0x00*/ u8 finished : 1;
-    /*0x00*/ u8 envMixerNeedsInit : 1;
-    /*0x00*/ u8 stereoStrongRight : 1;
-    /*0x00*/ u8 stereoStrongLeft : 1;
-    /*0x00*/ u8 stereoHeadsetEffects : 1;
+    /*0x00*/ volatile u8 enabled      : 1;
+    /*0x00*/ u8 needsInit             : 1;
+    /*0x00*/ u8 finished              : 1;
+    /*0x00*/ u8 envMixerNeedsInit     : 1;
+    /*0x00*/ u8 stereoStrongRight     : 1;
+    /*0x00*/ u8 stereoStrongLeft      : 1;
+    /*0x00*/ u8 stereoHeadsetEffects  : 1;
     /*0x00*/ u8 usesHeadsetPanEffects : 1;
-    /*0x01*/ u8 reverbIndex : 3;
-    /*0x01*/ u8 bookOffset : 3;
-    /*0x01*/ u8 isSyntheticWave : 1;
-    /*0x01*/ u8 hasTwoAdpcmParts : 1;
+    /*0x01*/ u8 reverbIndex           : 3;
+    /*0x01*/ u8 bookOffset            : 3;
+    /*0x01*/ u8 isSyntheticWave       : 1;
+    /*0x01*/ u8 hasTwoAdpcmParts      : 1;
 #ifdef VERSION_EU
     /*0x02*/ u8 bankId;
 #else
@@ -599,8 +601,8 @@ struct NoteSubEu {
 #endif
     /*0x03*/ u8 headsetPanRight;
     /*0x04*/ u8 headsetPanLeft;
-    /*0x05*/ u8 reverbVol; // UQ0.7 (EU Q1.7)
-    /*0x06*/ u16 targetVolLeft; // UQ0.12 (EU UQ0.10)
+    /*0x05*/ u8 reverbVol;       // UQ0.7  (EU Q1.7)
+    /*0x06*/ u16 targetVolLeft;  // UQ0.12 (EU UQ0.10)
     /*0x08*/ u16 targetVolRight; // UQ0.12 (EU UQ0.10)
     /*0x0A*/ u16 resamplingRateFixedPoint; // stored as signed but loaded as u16
     /*0x0C*/ union {
@@ -653,13 +655,13 @@ struct vNote {
 }; // size = 0xC0
 struct Note {
     /* U/J, EU  */
-    /*0x00*/ u8 enabled : 1;
-    /*0x00*/ u8 needsInit : 1;
-    /*0x00*/ u8 restart : 1;
-    /*0x00*/ u8 finished : 1;
-    /*0x00*/ u8 envMixerNeedsInit : 1;
-    /*0x00*/ u8 stereoStrongRight : 1;
-    /*0x00*/ u8 stereoStrongLeft : 1;
+    /*0x00*/ u8 enabled              : 1;
+    /*0x00*/ u8 needsInit            : 1;
+    /*0x00*/ u8 restart              : 1;
+    /*0x00*/ u8 finished             : 1;
+    /*0x00*/ u8 envMixerNeedsInit    : 1;
+    /*0x00*/ u8 stereoStrongRight    : 1;
+    /*0x00*/ u8 stereoStrongLeft     : 1;
     /*0x00*/ u8 stereoHeadsetEffects : 1;
     /*0x01*/ u8 usesHeadsetPanEffects;
     /*0x02*/ u8 unk2;
@@ -726,6 +728,11 @@ struct ReverbSettingsEU {
     u16 gain;
 };
 #else
+struct ReverbSettingsUS {
+    u8 downsampleRate;
+    u16 windowSize;
+    u16 gain;
+};
 struct ReverbSettingsEU {
     u8 downsampleRate; // always 1
     u8 windowSize; // To be multiplied by 16
@@ -853,7 +860,6 @@ struct UnkStruct80343D00 {
 };
 
 // in external.c
-extern s32 D_SH_80343CF0;
 extern struct UnkStruct80343D00 D_SH_80343D00;
 #endif
 

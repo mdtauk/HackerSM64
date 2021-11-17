@@ -47,7 +47,7 @@ static void ttc_moving_bar_act_wait(void) {
         } else {
             if (gTTCSpeedSetting == TTC_SPEED_RANDOM) {
                 // Set the delay for the next cycle
-                o->oTTCMovingBarDelay = sTTCMovingBarRandomDelays[random_u16() & 0x03];
+                o->oTTCMovingBarDelay = sTTCMovingBarRandomDelays[random_u16() & 0x3];
 
                 // With 50% probability, pause after pulling back
                 if (random_u16() % 2 == 0) {

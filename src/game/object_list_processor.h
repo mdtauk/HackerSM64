@@ -11,14 +11,15 @@
  * Flags for gTimeStopState. These control which objects are processed each frame
  * and also track some miscellaneous info.
  */
-#define TIME_STOP_UNKNOWN_0         (1 << 0)
-#define TIME_STOP_ENABLED           (1 << 1)
-#define TIME_STOP_DIALOG            (1 << 2)
-#define TIME_STOP_MARIO_AND_DOORS   (1 << 3)
-#define TIME_STOP_ALL_OBJECTS       (1 << 4)
-#define TIME_STOP_MARIO_OPENED_DOOR (1 << 5)
-#define TIME_STOP_ACTIVE            (1 << 6)
-
+enum gTimeStopStateFlags {
+    TIME_STOP_UNKNOWN_0         = (1 << 0),
+    TIME_STOP_ENABLED           = (1 << 1),
+    TIME_STOP_DIALOG            = (1 << 2),
+    TIME_STOP_MARIO_AND_DOORS   = (1 << 3),
+    TIME_STOP_ALL_OBJECTS       = (1 << 4),
+    TIME_STOP_MARIO_OPENED_DOOR = (1 << 5),
+    TIME_STOP_ACTIVE            = (1 << 6),
+};
 
 /**
  * The maximum number of objects that can be loaded at once.
@@ -62,7 +63,6 @@ extern struct ObjectNode gObjectListArray[];
 
 extern s32 gDebugInfoFlags;
 extern s32 gNumFindFloorMisses;
-extern UNUSED s32 unused_8033BEF8;
 extern s32 gUnknownWallCount;
 extern u32 gObjectCounter;
 
@@ -84,8 +84,8 @@ extern struct ObjectNode *gObjectLists;
 extern struct ObjectNode gFreeObjectList;
 
 extern struct Object *gMarioObject;
-extern struct Object *gLuigiObject;
 extern struct Object *gCurrentObject;
+#define o gCurrentObject
 
 extern const BehaviorScript *gCurBhvCommand;
 extern s16 gPrevFrameObjectCount;
@@ -95,16 +95,23 @@ extern s32 gSurfacesAllocated;
 extern s32 gNumStaticSurfaceNodes;
 extern s32 gNumStaticSurfaces;
 
+#define OBJECT_MEMORY_POOL 0x800
+
 extern struct MemoryPool *gObjectMemoryPool;
 
-extern s16 gCheckingSurfaceCollisionsForCamera;
-extern s16 gFindFloorIncludeSurfaceIntangible;
-extern s16 *gEnvironmentRegions;
+enum CollisionFlags {
+    COLLISION_FLAGS_NONE              = (0 << 0),
+    COLLISION_FLAG_RETURN_FIRST       = (1 << 1),
+    COLLISION_FLAG_CAMERA             = (1 << 2),
+    COLLISION_FLAG_INCLUDE_INTANGIBLE = (1 << 3),
+    COLLISION_FLAG_EXCLUDE_DYNAMIC    = (1 << 4),
+};
+
+extern s16 gCollisionFlags;
+extern TerrainData *gEnvironmentRegions;
 extern s32 gEnvironmentLevels[20];
-extern s8 gDoorAdjacentRooms[60][2];
+extern RoomData gDoorAdjacentRooms[60][2];
 extern s16 gMarioCurrentRoom;
-extern s16 D_8035FEE2;
-extern s16 D_8035FEE4;
 extern s16 gTHIWaterDrained;
 extern s16 gTTCSpeedSetting;
 extern s16 gMarioShotFromCannon;
@@ -117,10 +124,10 @@ extern s16 gMarioOnMerryGoRound;
 
 void bhv_mario_update(void);
 void set_object_respawn_info_bits(struct Object *obj, u8 bits);
-void unload_objects_from_area(UNUSED s32 unused, s32 areaIndex);
-void spawn_objects_from_info(UNUSED s32 unused, struct SpawnInfo *spawnInfo);
+void unload_objects_from_area(s32 areaIndex);
+void spawn_objects_from_info(struct SpawnInfo *spawnInfo);
 void clear_objects(void);
-void update_objects(UNUSED s32 unused);
+void update_objects(void);
 
 
 #endif // OBJECT_LIST_PROCESSOR_H

@@ -49,7 +49,7 @@ void bowling_ball_set_hitbox(void) {
     obj_set_hitbox(o, &sBowlingBallHitbox);
 
     if (o->oInteractStatus & INT_STATUS_INTERACTED) {
-        o->oInteractStatus = 0;
+        o->oInteractStatus = INT_STATUS_NONE;
     }
 }
 
@@ -78,22 +78,15 @@ void bowling_ball_set_waypoints(void) {
 }
 
 void bhv_bowling_ball_roll_loop(void) {
-    s16 collisionFlags;
-    s32 followStatus;
-#ifdef AVOID_UB
-    followStatus = 0;
-#endif
-
     bowling_ball_set_waypoints();
-    collisionFlags = object_step();
+    s16 collisionFlags = object_step();
 
-    //! Uninitialzed parameter, but the parameter is unused in the called function
-    followStatus = cur_obj_follow_path(followStatus);
+    s32 followStatus = cur_obj_follow_path();
 
     o->oBowlingBallTargetYaw = o->oPathedTargetYaw;
     o->oMoveAngleYaw = approach_s16_symmetric(o->oMoveAngleYaw, o->oBowlingBallTargetYaw, 0x400);
-    if (o->oForwardVel > 70.0) {
-        o->oForwardVel = 70.0;
+    if (o->oForwardVel > 70.0f) {
+        o->oForwardVel = 70.0f;
     }
 
     bowling_ball_set_hitbox();
@@ -113,15 +106,9 @@ void bhv_bowling_ball_roll_loop(void) {
 }
 
 void bhv_bowling_ball_initialize_loop(void) {
-    s32 followStatus;
-#ifdef AVOID_UB
-    followStatus = 0;
-#endif
-
     bowling_ball_set_waypoints();
 
-    //! Uninitialzed parameter, but the parameter is unused in the called function
-    followStatus = cur_obj_follow_path(followStatus);
+    cur_obj_follow_path();
 
     o->oMoveAngleYaw = o->oPathedTargetYaw;
 
@@ -211,18 +198,16 @@ void bhv_thi_bowling_ball_spawner_loop(void) {
     if (o->oTimer == 256) {
         o->oTimer = 0;
     }
-
     if (is_point_within_radius_of_mario(o->oPosX, o->oPosY, o->oPosZ, 800)
-        || o->oPosY < gMarioObject->header.gfx.pos[1]) {
+        || (o->oPosY < gMarioObject->header.gfx.pos[1])) {
         return;
     }
 
-    if ((o->oTimer % 64) == 0) {
-        if (is_point_within_radius_of_mario(o->oPosX, o->oPosY, o->oPosZ, 12000)
-            && (s32)(random_float() * 1.5) == 0) {
-            struct Object *bowlingBall = spawn_object(o, MODEL_BOWLING_BALL, bhvBowlingBall);
-            bowlingBall->oBehParams2ndByte = o->oBehParams2ndByte;
-        }
+    if (!(o->oTimer & 63)
+     && is_point_within_radius_of_mario(o->oPosX, o->oPosY, o->oPosZ, 12000)
+     && (s32)(random_float() * 1.5f) == 0) {
+        struct Object *bowlingBall = spawn_object(o, MODEL_BOWLING_BALL, bhvBowlingBall);
+        bowlingBall->oBehParams2ndByte = o->oBehParams2ndByte;
     }
 }
 
@@ -233,17 +218,14 @@ void bhv_bob_pit_bowling_ball_init(void) {
 }
 
 void bhv_bob_pit_bowling_ball_loop(void) {
-    struct FloorGeometry *sp1c;
-    UNUSED s16 collisionFlags = object_step();
+    object_step();
 
-    find_floor_height_and_data(o->oPosX, o->oPosY, o->oPosZ, &sp1c);
-    if ((sp1c->normalX == 0) && (sp1c->normalZ == 0)) {
+    if ((o->oFloor != NULL) && (o->oFloor->normal.x == 0) && (o->oFloor->normal.z == 0)) {
         o->oForwardVel = 28.0f;
     }
-
     bowling_ball_set_hitbox();
     set_camera_shake_from_point(SHAKE_POS_BOWLING_BALL, o->oPosX, o->oPosY, o->oPosZ);
-    cur_obj_play_sound_1(SOUND_ENV_UNKNOWN2);
+    cur_obj_play_sound_1(SOUND_ENV_BOWLING_BALL_ROLL);
     set_object_visibility(o, 3000);
 }
 
@@ -251,34 +233,29 @@ void bhv_free_bowling_ball_init(void) {
     o->oGravity = 5.5f;
     o->oFriction = 1.0f;
     o->oBuoyancy = 2.0f;
-    o->oHomeX = o->oPosX;
-    o->oHomeY = o->oPosY;
-    o->oHomeZ = o->oPosZ;
+    vec3f_copy(&o->oHomeVec, &o->oPosVec);
     o->oForwardVel = 0;
     o->oMoveAngleYaw = 0;
 }
 
 void bhv_free_bowling_ball_roll_loop(void) {
-    s16 collisionFlags = object_step();
-
+    /*s16 collisionFlags = */object_step();
     bowling_ball_set_hitbox();
 
     if (o->oForwardVel > 10.0f) {
         set_camera_shake_from_point(SHAKE_POS_BOWLING_BALL, o->oPosX, o->oPosY, o->oPosZ);
-        cur_obj_play_sound_1(SOUND_ENV_UNKNOWN2);
+        cur_obj_play_sound_1(SOUND_ENV_BOWLING_BALL_ROLL);
     }
 
-    if ((collisionFlags & OBJ_COL_FLAG_GROUNDED) && !(collisionFlags & OBJ_COL_FLAGS_LANDED)) {
-        cur_obj_play_sound_2(SOUND_GENERAL_QUIET_POUND1_LOWPRIO);
-    }
+    /* Always false, commented out to suppress compiler warnings */
+    // if ((collisionFlags & OBJ_COL_FLAG_GROUNDED) && !(collisionFlags & OBJ_COL_FLAGS_LANDED)) {
+    //     cur_obj_play_sound_2(SOUND_GENERAL_QUIET_POUND1_LOWPRIO);
+    // }
 
     if (!is_point_within_radius_of_mario(o->oPosX, o->oPosY, o->oPosZ, 6000)) {
         o->header.gfx.node.flags |= GRAPH_RENDER_INVISIBLE;
         cur_obj_become_intangible();
-
-        o->oPosX = o->oHomeX;
-        o->oPosY = o->oHomeY;
-        o->oPosZ = o->oHomeZ;
+        vec3f_copy(&o->oPosVec, &o->oHomeVec);
         bhv_free_bowling_ball_init();
         o->oAction = FREE_BBALL_ACT_RESET;
     }

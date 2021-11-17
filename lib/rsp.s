@@ -39,6 +39,26 @@ glabel gspSuper3D_fifoTextEnd
     #endif
 #endif
 
+.balign 16
+glabel gspF3DEX2_Rej_fifoTextStart
+	.incbin "lib/PR/f3dex2/fifo/F3DEX2_Rej.bin"
+glabel gspF3DEX2_Rej_fifoTextEnd
+
+.balign 16
+glabel gspF3DLX2_Rej_fifoTextStart
+	.incbin "lib/PR/f3dex2/fifo/F3DLX2_Rej.bin"
+glabel gspF3DLX2_Rej_fifoTextEnd
+
+.balign 16
+glabel gspS2DEX2_fifoTextStart
+    .incbin "lib/PR/s2dex2/fifo/S2DEX2.bin"
+glabel gspS2DEX2_fifoTextEnd
+
+.balign 16
+glabel gspL3DZEX2_PosLight_fifoTextStart
+    .incbin "lib/PR/f3dzex/fifo/L3DZEX.bin"
+glabel gspL3DZEX2_PosLight_fifoTextEnd
+
 /* Audio Bins */
 
 /*
@@ -190,6 +210,26 @@ glabel gspSuper3D_fifoDataEnd
     glabel gspF3DZEX2_PosLight_fifoDataEnd
     #endif
 #endif
+
+.balign 16
+glabel gspF3DEX2_Rej_fifoDataStart
+	.incbin "lib/PR/f3dex2/fifo/F3DEX2_Rej_data.bin"
+glabel gspF3DEX2_Rej_fifoDataEnd
+
+.balign 16
+glabel gspF3DLX2_Rej_fifoDataStart
+	.incbin "lib/PR/f3dex2/fifo/F3DLX2_Rej_data.bin"
+glabel gspF3DLX2_Rej_fifoDataEnd
+
+.balign 16
+glabel gspS2DEX_fifoDataStart
+    .incbin "lib/PR/s2dex/fifo/S2DEX_data.bin"
+glabel gspS2DEX_fifoDataEnd
+
+.balign 16
+glabel gspS2DEX2_fifoDataStart
+    .incbin "lib/PR/s2dex2/fifo/S2DEX2_data.bin"
+glabel gspS2DEX2_fifoDataEnd
 
 /* Audio Data */
 

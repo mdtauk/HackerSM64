@@ -1,16 +1,14 @@
 // hidden_star.inc.c
 
 void bhv_hidden_star_init(void) {
-    s16 count = count_objects_with_behavior(bhvHiddenStarTrigger);
-
-    if (count == 0) {
-        struct Object *star = spawn_object_abs_with_rot(o, 0, MODEL_STAR, bhvStar,
-                                                        o->oPosX, o->oPosY, o->oPosZ, 0, 0, 0);
-        star->oBehParams = o->oBehParams;
+    s16 remainingTriggers = count_objects_with_behavior(bhvHiddenStarTrigger);
+    if (remainingTriggers == 0) {
+        struct Object *starObj = spawn_object_abs_with_rot(o, 0, MODEL_STAR, bhvStar, o->oPosX, o->oPosY, o->oPosZ, 0, 0, 0);
+        starObj->oBehParams = o->oBehParams;
         o->activeFlags = ACTIVE_FLAG_DEACTIVATED;
     }
 
-    o->oHiddenStarTriggerCounter = 5 - count;
+    o->oHiddenStarTriggerCounter = 5 - remainingTriggers;
 }
 
 void bhv_hidden_star_loop(void) {
@@ -32,7 +30,7 @@ void bhv_hidden_star_loop(void) {
 }
 
 void bhv_hidden_star_trigger_loop(void) {
-    if (obj_check_if_collided_with_object(o, gMarioObject) == TRUE) {
+    if (obj_check_if_collided_with_object(o, gMarioObject)) {
         struct Object *hiddenStar = cur_obj_nearest_object_with_behavior(bhvHiddenStar);
 
         if (hiddenStar != NULL) {
@@ -41,13 +39,7 @@ void bhv_hidden_star_trigger_loop(void) {
             if (hiddenStar->oHiddenStarTriggerCounter != 5) {
                 spawn_orange_number(hiddenStar->oHiddenStarTriggerCounter, 0, 0, 0);
             }
-
-#ifdef VERSION_JP
-            play_sound(SOUND_MENU_STAR_SOUND, gGlobalSoundSource);
-#else
-            play_sound(SOUND_MENU_COLLECT_SECRET
-                       + (((u8) hiddenStar->oHiddenStarTriggerCounter - 1) << 16), gGlobalSoundSource);
-#endif
+            play_sound(SOUND_MENU_COLLECT_SECRET + (((u8) hiddenStar->oHiddenStarTriggerCounter - 1) << 16), gGlobalSoundSource);
         }
 
         o->activeFlags = ACTIVE_FLAG_DEACTIVATED;

@@ -27,10 +27,10 @@ enum DParmPtr {
 
 /// parameters for `d_set_parm_f()`
 enum DParmF {
-    PARM_F_ALPHA = 1,       ///< Set the alpha value for an `ObjShape` or `ObjVertex`
-    PARM_F_RANGE_MIN = 2,  ///< Set the left range for an `ObjGadget`
+    PARM_F_ALPHA     = 1, ///< Set the alpha value for an `ObjShape` or `ObjVertex`
+    PARM_F_RANGE_MIN = 2, ///< Set the left range for an `ObjGadget`
     PARM_F_RANGE_MAX = 3, ///< Set the right range for an `ObjGadget`
-    PARM_F_VARVAL = 6       ///< Set the float variable value union in an `ObjGadget`
+    PARM_F_VARVAL    = 6  ///< Set the float variable value union in an `ObjGadget`
 };
 
 /// `d_makeobj()` object types
@@ -80,7 +80,7 @@ void d_set_world_pos(f32 x, f32 y, f32 z);
 void d_get_world_pos(struct GdVec3f *dst);
 void d_set_scale(f32 x, f32 y, f32 z);
 void d_add_valptr(DynObjName name, u32 vflags, enum ValPtrType type, size_t offset);
-void d_add_valproc(union ObjVarVal * (*)(union ObjVarVal *, union ObjVarVal));
+void d_add_valproc(valptrproc_t proc);
 void d_set_flags(s32 flags);
 void d_set_parm_f(enum DParmF param, f32 val);
 void d_set_parm_ptr(enum DParmPtr param, void *ptr);

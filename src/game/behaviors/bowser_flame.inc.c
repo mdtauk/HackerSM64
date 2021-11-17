@@ -3,55 +3,44 @@
 struct ObjectHitbox sGrowingBowserFlameHitbox = {
     /* interactType:      */ INTERACT_FLAME,
     /* downOffset:        */ 20,
-    /* damageOrCoinValue: */ 1,
-    /* health:            */ 0,
-    /* numLootCoins:      */ 0,
+    /* damageOrCoinValue: */  1,
+    /* health:            */  0,
+    /* numLootCoins:      */  0,
     /* radius:            */ 10,
     /* height:            */ 40,
-    /* hurtboxRadius:     */ 0,
-    /* hurtboxHeight:     */ 0,
+    /* hurtboxRadius:     */  0,
+    /* hurtboxHeight:     */  0,
 };
 
 struct ObjectHitbox sBowserFlameHitbox = {
     /* interactType:      */ INTERACT_FLAME,
-    /* downOffset:        */ 0,
-    /* damageOrCoinValue: */ 1,
-    /* health:            */ 0,
-    /* numLootCoins:      */ 0,
+    /* downOffset:        */  0,
+    /* damageOrCoinValue: */  1,
+    /* health:            */  0,
+    /* numLootCoins:      */  0,
     /* radius:            */ 10,
     /* height:            */ 40,
-    /* hurtboxRadius:     */ 0,
-    /* hurtboxHeight:     */ 0,
+    /* hurtboxRadius:     */  0,
+    /* hurtboxHeight:     */  0,
 };
 
 void bowser_flame_despawn(void) {
     obj_mark_for_deletion(o);
     spawn_object_with_scale(o, MODEL_NONE, bhvBlackSmokeUpward, 1.0f);
-    if (random_float() < 0.1) {
+    if (random_float() < 0.1f) {
         spawn_object(o, MODEL_YELLOW_COIN, bhvTemporaryYellowCoin);
     }
 }
 
 s32 bowser_flame_should_despawn(s32 maxTime) {
-    if (maxTime < o->oTimer) {
-        return TRUE;
-    }
-
     // Flames should despawn if they fall off the arena.
-    if (o->oFloorType == SURFACE_BURNING) {
-        return TRUE;
-    }
-    if (o->oFloorType == SURFACE_DEATH_PLANE) {
-        return TRUE;
-    }
-
-    return FALSE;
+    return ((maxTime < o->oTimer) || (o->oFloorType == SURFACE_BURNING) || (o->oFloorType == SURFACE_DEATH_PLANE));
 }
 
 void bhv_flame_bowser_init(void) {
     o->oAnimState = (s32)(random_float() * 10.0f);
     o->oMoveAngleYaw = random_u16();
-    o->oVelY = random_float() < 0.2 ? 80.0f : 20.0f;
+    o->oVelY = ((random_float() < 0.2f) ? 80.0f : 20.0f);
     o->oForwardVel = 10.0f;
     o->oGravity = -1.0f;
     o->oFlameScale = random_float() + 1.0f;
@@ -88,7 +77,7 @@ void bhv_flame_bowser_loop(void) {
             if (cur_obj_has_behavior(bhvFlameLargeBurningOut)) {
                 o->oFlameScale = 8.0f;
             } else {
-                o->oFlameScale = random_float() * 2 + 6.0f;
+                o->oFlameScale = ((random_float() * 2) + 6.0f);
             }
             o->oForwardVel = 0;
             o->oVelY = 0;
@@ -97,8 +86,8 @@ void bhv_flame_bowser_loop(void) {
     } else {
         cur_obj_become_tangible();
 
-        if (o->oTimer > o->oFlameScale * 10 + 5.0f) {
-            o->oFlameScale -= 0.15;
+        if (o->oTimer > ((o->oFlameScale * 10) + 5.0f)) {
+            o->oFlameScale -= 0.15f;
             if (o->oFlameScale <= 0) {
                 bowser_flame_despawn();
             }
@@ -106,7 +95,7 @@ void bhv_flame_bowser_loop(void) {
     }
 
     cur_obj_scale(o->oFlameScale);
-    o->oGraphYOffset = o->header.gfx.scale[1] * 14.0f;
+    o->oGraphYOffset = (o->header.gfx.scale[1] * 14.0f);
     obj_set_hitbox(o, &sBowserFlameHitbox);
 }
 
@@ -118,11 +107,8 @@ void bhv_flame_moving_forward_growing_init(void) {
 }
 
 void bhv_flame_moving_forward_growing_loop(void) {
-    UNUSED u8 filler[4];
-    UNUSED struct Object *flame;
-
     obj_set_hitbox(o, &sGrowingBowserFlameHitbox);
-    o->oFlameScale = o->oFlameScale + 0.5;
+    o->oFlameScale = o->oFlameScale + 0.5f;
     cur_obj_scale(o->oFlameScale);
 
     if (o->oMoveAnglePitch > 0x800) {
@@ -138,7 +124,7 @@ void bhv_flame_moving_forward_growing_loop(void) {
 
     if (o->oPosY < o->oFloorHeight) {
         o->oPosY = o->oFloorHeight;
-        flame = spawn_object(o, MODEL_RED_FLAME, bhvFlameBowser);
+        spawn_object(o, MODEL_RED_FLAME, bhvFlameBowser);
         obj_mark_for_deletion(o);
     }
 }
@@ -147,7 +133,7 @@ void bhv_flame_floating_landing_init(void) {
     o->oAnimState = (s32)(random_float() * 10.0f);
     o->oMoveAngleYaw = random_u16();
     if (o->oBehParams2ndByte != 0) {
-        o->oForwardVel = random_float() * 5.0f;
+        o->oForwardVel = random_float() *  5.0f;
     } else {
         o->oForwardVel = random_float() * 70.0f;
     }
@@ -159,8 +145,6 @@ void bhv_flame_floating_landing_init(void) {
 f32 sFlameFloatingYLimit[] = { -8.0f, -6.0f, -3.0f };
 
 void bhv_flame_floating_landing_loop(void) {
-    UNUSED u8 filler[4];
-
     cur_obj_update_floor_and_walls();
     cur_obj_move_standard(78);
     bowser_flame_move();
@@ -191,7 +175,7 @@ void bhv_blue_bowser_flame_init(void) {
     o->oVelY = 7.0f;
     o->oForwardVel = 35.0f;
     o->oFlameScale = 3.0f;
-    o->oFlameUnusedRand = random_float() * 0.5;
+    o->oFlameUnusedRand = random_float() * 0.5f;
     o->oGravity = 1.0f;
     o->oFlameSpeedTimerOffset = (s32)(random_float() * 64.0f);
 }
@@ -202,7 +186,7 @@ void bhv_blue_bowser_flame_loop(void) {
     obj_set_hitbox(o, &sGrowingBowserFlameHitbox);
 
     if (o->oFlameScale < 16.0f) {
-        o->oFlameScale = o->oFlameScale + 0.5;
+        o->oFlameScale = o->oFlameScale + 0.5f;
     }
 
     cur_obj_scale(o->oFlameScale);
@@ -271,13 +255,13 @@ void bhv_blue_flames_group_loop(void) {
     }
 
     if (o->oTimer < 16) {
-        if (!(o->oTimer & 1)) {
+        if (!(o->oTimer & 0x1)) {
             for (i = 0; i < 3; i++) {
                 flame = spawn_object(o, MODEL_BLUE_FLAME, bhvFlameBouncing);
-                flame->oMoveAngleYaw += i * 0x5555;
+                flame->oMoveAngleYaw += (i * DEGREES(120));
                 flame->header.gfx.scale[0] = o->oBlueFlameNextScale;
             }
-            o->oBlueFlameNextScale -= 0.5;
+            o->oBlueFlameNextScale -= 0.5f;
         }
     } else {
         obj_mark_for_deletion(o);

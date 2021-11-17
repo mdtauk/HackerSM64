@@ -12,16 +12,14 @@
  */
 void piranha_plant_act_idle(void) {
     cur_obj_become_intangible();
-    cur_obj_init_animation_with_sound(8);
+    cur_obj_init_animation_with_sound(PIRANHA_PLANT_ANIM_SLEEPING);
 
-#if BUGFIX_PIRANHA_PLANT_STATE_RESET
     /**
      * This call is necessary because a Piranha Plant may enter this state
      * with a scale below 1, which would cause it to appear shrunken. See
      * documentation for, and calls to, piranha_plant_reset_when_far().
      */
     cur_obj_scale(1.0f);
-#endif
 
     if (o->oDistanceToMario < 1200.0f) {
         o->oAction = PIRANHA_PLANT_ACT_SLEEPING;
@@ -38,8 +36,6 @@ void piranha_plant_act_idle(void) {
  */
 s32 piranha_plant_check_interactions(void) {
     s32 i;
-    s32 interacted = TRUE;
-
     if (o->oInteractStatus & INT_STATUS_INTERACTED) {
         func_80321080(50);
         if (o->oInteractStatus & INT_STATUS_WAS_ATTACKED) {
@@ -53,13 +49,15 @@ s32 piranha_plant_check_interactions(void) {
         } else {
             o->oAction = PIRANHA_PLANT_ACT_WOKEN_UP;
         }
-        o->oInteractStatus = 0;
+        o->oInteractStatus = INT_STATUS_NONE;
     } else {
-        interacted = FALSE;
+        return FALSE;
     }
 
-    return interacted;
+    return TRUE;
 }
+
+#define PIRANHA_PLANT_SLEEP_MUSIC_PLAYING 0
 
 /**
  * Make the Piranha Plant sleep. If Mario moves too quickly, move the Piranha
@@ -71,22 +69,15 @@ void piranha_plant_act_sleeping(void) {
     cur_obj_become_tangible();
     o->oInteractType = INTERACT_BOUNCE_TOP;
 
-    cur_obj_init_animation_with_sound(8);
+    cur_obj_init_animation_with_sound(PIRANHA_PLANT_ANIM_SLEEPING);
 
     cur_obj_set_hitbox_radius_and_height(250.0f, 200.0f);
     cur_obj_set_hurtbox_radius_and_height(150.0f, 100.0f);
 
-#if BUGFIX_PIRANHA_PLANT_SLEEP_DAMAGE
     /**
      * Make Piranha Plants harmless, but tangible, while they sleep.
      */
     o->oDamageOrCoinValue = 0;
-#elif defined(VERSION_EU)
-    /**
-     * Make Piranha Plants harmful when sleeping - but do it explicitly.
-     */
-    o->oDamageOrCoinValue = 3;
-#endif
 
     if (o->oDistanceToMario < 400.0f) {
         if (mario_moving_fast_enough_to_make_piranha_plant_bite()) {
@@ -107,24 +98,19 @@ void piranha_plant_act_sleeping(void) {
  * to the biting state.
  */
 void piranha_plant_act_woken_up(void) {
-#if BUGFIX_PIRANHA_PLANT_SLEEP_DAMAGE || defined(VERSION_EU)
     /**
-     * Make Piranha Plants damage the player while awake. This call is only
-     * necessary in the US version because it is set to 3 by default and is
-     * never changed in the JP version.
+     * Make Piranha Plants damage the player while awake.
      */
     o->oDamageOrCoinValue = 3;
-#endif
     if (o->oTimer == 0) {
         func_80321080(50);
     }
 
-    if (!piranha_plant_check_interactions() && o->oTimer > 10) {
+    if (!piranha_plant_check_interactions() && (o->oTimer > 10)) {
         o->oAction = PIRANHA_PLANT_ACT_BITING;
     }
 }
 
-#if BUGFIX_PIRANHA_PLANT_STATE_RESET
 /**
  * If the Piranha Plant is far from the player, move it to the idle state.
  *
@@ -145,7 +131,6 @@ void piranha_plant_reset_when_far(void) {
         o->oAction = PIRANHA_PLANT_ACT_IDLE;
     }
 }
-#endif
 
 /**
  * Make the Piranha Plant play a falling-over animation and move to the dying
@@ -153,14 +138,12 @@ void piranha_plant_reset_when_far(void) {
  */
 void piranha_plant_attacked(void) {
     cur_obj_become_intangible();
-    cur_obj_init_animation_with_sound(2);
-    o->oInteractStatus = 0;
+    cur_obj_init_animation_with_sound(PIRANHA_PLANT_ANIM_FALLING_OVER);
+    o->oInteractStatus = INT_STATUS_NONE;
     if (cur_obj_check_if_near_animation_end()) {
         o->oAction = PIRANHA_PLANT_ACT_SHRINK_AND_DIE;
     }
-#if BUGFIX_PIRANHA_PLANT_STATE_RESET
     piranha_plant_reset_when_far(); // see this function's comment
-#endif
 }
 
 /**
@@ -180,8 +163,8 @@ void piranha_plant_act_shrink_and_die(void) {
      * programmers meant to type `else if`.
      */
     if (o->oPiranhaPlantScale > 0.0f) {
-        // Shrink by 0.04 per frame.
-        o->oPiranhaPlantScale = o->oPiranhaPlantScale - 0.04;
+        // Shrink by 0.04f per frame.
+        o->oPiranhaPlantScale = (o->oPiranhaPlantScale - 0.04f);
     } else {
         o->oPiranhaPlantScale = 0.0f;
         cur_obj_spawn_loot_blue_coin();
@@ -190,9 +173,7 @@ void piranha_plant_act_shrink_and_die(void) {
 
     cur_obj_scale(o->oPiranhaPlantScale);
 
-#if BUGFIX_PIRANHA_PLANT_STATE_RESET
     piranha_plant_reset_when_far(); // see this function's comment
-#endif
 }
 
 /**
@@ -209,7 +190,7 @@ void piranha_plant_act_wait_to_respawn(void) {
  * grown, set it to the idle state.
  */
 void piranha_plant_act_respawn(void) {
-    cur_obj_init_animation_with_sound(8);
+    cur_obj_init_animation_with_sound(PIRANHA_PLANT_ANIM_SLEEPING);
     if (o->oTimer == 0) {
         o->oPiranhaPlantScale = 0.3f;
     }
@@ -220,9 +201,9 @@ void piranha_plant_act_respawn(void) {
      * sets the Piranha Plant's scale to 0, therefore the Piranha Plant will
      * grow from the ground unconditionally when in this state.
      */
-    if (o->oPiranhaPlantScale < 1.0) {
-        // Grow by 0.02 per frame.
-        o->oPiranhaPlantScale += 0.02;
+    if (o->oPiranhaPlantScale < 1.0f) {
+        // Grow by 0.02f per frame.
+        o->oPiranhaPlantScale += 0.02f;
     } else {
         o->oPiranhaPlantScale = 1.0f;
         o->oAction = PIRANHA_PLANT_ACT_IDLE;
@@ -249,7 +230,7 @@ void piranha_plant_act_biting(void) {
 
     o->oInteractType = INTERACT_DAMAGE;
 
-    cur_obj_init_animation_with_sound(0);
+    cur_obj_init_animation_with_sound(PIRANHA_PLANT_ANIM_BITE);
 
     cur_obj_set_hitbox_radius_and_height(150.0f, 100.0f);
     cur_obj_set_hurtbox_radius_and_height(150.0f, 100.0f);
@@ -280,13 +261,8 @@ void piranha_plant_act_biting(void) {
  * This is called from both the "stopped biting" state and the "sleeping" state.
  */
 s32 mario_moving_fast_enough_to_make_piranha_plant_bite(void) {
-    if (gMarioStates[0].vel[1] > 10.0f) {
-        return TRUE;
-    }
-    if (gMarioStates[0].forwardVel > 10.0f) {
-        return TRUE;
-    }
-    return FALSE;
+    return ((gMarioState->vel[1]     > 10.0f)
+         || (gMarioState->forwardVel > 10.0f));
 }
 
 /**
@@ -296,7 +272,7 @@ s32 mario_moving_fast_enough_to_make_piranha_plant_bite(void) {
  */
 void piranha_plant_act_stopped_biting(void) {
     cur_obj_become_intangible();
-    cur_obj_init_animation_with_sound(6);
+    cur_obj_init_animation_with_sound(PIRANHA_PLANT_ANIM_STOP_BITING);
 
     if (cur_obj_check_if_near_animation_end()) {
         o->oAction = PIRANHA_PLANT_ACT_SLEEPING;
@@ -317,7 +293,7 @@ void piranha_plant_act_stopped_biting(void) {
 /**
  * Table of functions corresponding to the actions the Piranha Plant can take.
  */
-void (*TablePiranhaPlantActions[])(void) = {
+ObjActionFunc TablePiranhaPlantActions[] = {
     piranha_plant_act_idle,            // PIRANHA_PLANT_ACT_IDLE,
     piranha_plant_act_sleeping,        // PIRANHA_PLANT_ACT_SLEEPING,
     piranha_plant_act_biting,          // PIRANHA_PLANT_ACT_BITING,
@@ -334,15 +310,11 @@ void (*TablePiranhaPlantActions[])(void) = {
  */
 void bhv_piranha_plant_loop(void) {
     cur_obj_call_action_function(TablePiranhaPlantActions);
-
+#ifndef DISABLE_VANILLA_LEVEL_SPECIFIC_CHECKS
     // In WF, hide all Piranha Plants once high enough up.
     if (gCurrLevelNum == LEVEL_WF) {
-        if (gMarioObject->oPosY > 3400.0f) {
-            cur_obj_hide();
-        } else {
-            cur_obj_unhide();
-        }
+        COND_BIT((gMarioObject->oPosY > 3400.0f), o->header.gfx.node.flags, GRAPH_RENDER_INVISIBLE);
     }
-
-    o->oInteractStatus = 0;
+#endif
+    o->oInteractStatus = INT_STATUS_NONE;
 }
