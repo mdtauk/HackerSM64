@@ -59,6 +59,7 @@ enum GraphNodeTypes {
     GRAPH_NODE_TYPE_OBJECT,
     GRAPH_NODE_TYPE_ANIMATED_PART,
     GRAPH_NODE_TYPE_BONE,
+    GRAPH_NODE_TYPE_GLOW,
     GRAPH_NODE_TYPE_BILLBOARD,
     GRAPH_NODE_TYPE_DISPLAY_LIST,
     GRAPH_NODE_TYPE_SCALE,
@@ -94,6 +95,7 @@ enum GraphNodeTypes {
     GRAPH_NODE_TYPE_BILLBOARD            =  0x1B,
     GRAPH_NODE_TYPE_DISPLAY_LIST         =  0x1C,
     GRAPH_NODE_TYPE_SCALE                =  0x1D,
+    GRAPH_NODE_TYPE_GLOW                 =  0x1E,
     GRAPH_NODE_TYPE_SHADOW               =  0x28,
     GRAPH_NODE_TYPE_OBJECT_PARENT        =  0x29,
     GRAPH_NODE_TYPE_GENERATED_LIST       = (0x2A | GRAPH_NODE_TYPE_FUNCTIONAL),
@@ -299,6 +301,13 @@ struct GraphNodeBone {
     Vec3s rotation;
 };
 
+struct GraphNodeGlow {
+    struct GraphNode node;
+    s16 zOffset;
+    s16 radius;
+    u32 color;
+};
+
 /** A GraphNode that draws a display list rotated in a way to always face the
  *  camera. Note that if the entire object is a billboard (like a coin or 1-up)
  *  then it simply sets the billboard flag for the entire object, this node is
@@ -423,6 +432,7 @@ struct GraphNodeObject              *init_graph_node_object              (struct
 struct GraphNodeCullingRadius       *init_graph_node_culling_radius      (struct AllocOnlyPool *pool, struct GraphNodeCullingRadius       *graphNode, s16 radius);
 struct GraphNodeAnimatedPart        *init_graph_node_animated_part       (struct AllocOnlyPool *pool, struct GraphNodeAnimatedPart        *graphNode, s32 drawingLayer, void *displayList, Vec3s translation);
 struct GraphNodeBone                *init_graph_node_bone                (struct AllocOnlyPool *pool, struct GraphNodeBone                *graphNode, s32 drawingLayer, void *displayList, Vec3s translation, Vec3s rotation);
+struct GraphNodeGlow                *init_graph_node_glow                (struct AllocOnlyPool *pool, struct GraphNodeGlow                *graphNode, s16 zOffset, s16 radius, u32 color);
 struct GraphNodeBillboard           *init_graph_node_billboard           (struct AllocOnlyPool *pool, struct GraphNodeBillboard           *graphNode, s32 drawingLayer, void *displayList, Vec3s translation);
 struct GraphNodeDisplayList         *init_graph_node_display_list        (struct AllocOnlyPool *pool, struct GraphNodeDisplayList         *graphNode, s32 drawingLayer, void *displayList);
 struct GraphNodeShadow              *init_graph_node_shadow              (struct AllocOnlyPool *pool, struct GraphNodeShadow              *graphNode, s16 shadowScale, u8 shadowSolidity, u8 shadowType);

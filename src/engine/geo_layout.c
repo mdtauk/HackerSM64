@@ -42,7 +42,8 @@ GeoLayoutCommandProc GeoLayoutJumpTable[] = {
     /*GEO_CMD_NOP_1E                    */ geo_layout_cmd_nop2,
     /*GEO_CMD_NOP_1F                    */ geo_layout_cmd_nop3,
     /*GEO_CMD_NODE_CULLING_RADIUS       */ geo_layout_cmd_node_culling_radius,
-    /*GEO_CMD_NODE_BONE                 */ geo_layout_cmd_bone,
+    /*GEO_CMD_BONE                      */ geo_layout_cmd_bone,
+    /*GEO_CMD_GLOW                      */ geo_layout_cmd_glow,
 };
 
 struct GraphNode gObjParentGraphNode;
@@ -767,6 +768,19 @@ void geo_layout_cmd_bone(void) {
     register_scene_graph_node(&graphNode->node);
 
     gGeoLayoutCommand = (u8 *) cmdPos;
+}
+
+void geo_layout_cmd_glow(void) {
+    struct GraphNodeGlow *graphNode;
+    s16 zOffset = cur_geo_cmd_s16(0x04);
+    s16 radius = cur_geo_cmd_s16(0x06);
+    u32 color = cur_geo_cmd_u32(0x08);
+
+    graphNode = init_graph_node_glow(gGraphNodePool, NULL, zOffset, radius, color);
+
+    register_scene_graph_node(&graphNode->node);
+
+    gGeoLayoutCommand += 0x0C << CMD_SIZE_SHIFT;
 }
 
 struct GraphNode *process_geo_layout(struct AllocOnlyPool *pool, void *segptr) {

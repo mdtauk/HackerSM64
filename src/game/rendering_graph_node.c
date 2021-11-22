@@ -320,6 +320,11 @@ void geo_process_master_list_sub(struct GraphNodeMasterList *node) {
                 gSPMatrix(gDisplayListHead++, VIRTUAL_TO_PHYSICAL(currList->transform),
                           G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_NOPUSH);
                 gSPDisplayList(gDisplayListHead++, currList->displayList);
+                // if (currLayer > LAYER_OPAQUE) {
+                //     gSPDisplayList(gDisplayListHead++, dl_glow);
+                // } else {
+                //     gSPDisplayList(gDisplayListHead++, currList->displayList);
+                // }
                 currList = currList->next;
             }
         }
@@ -361,9 +366,9 @@ void geo_append_display_list(void *displayList, s32 layer) {
 #ifdef OBJECTS_REJ
     s32 index = LIST_HEADS_ZEX;
 #endif
-#ifdef F3DEX_GBI_2
-    gSPLookAt(gDisplayListHead++, &lookAt);
-#endif
+// #ifdef F3DEX_GBI_2
+//     gSPLookAt(gDisplayListHead++, &lookAt);
+// #endif
 #if defined(F3DZEX_GBI_2) || (SILHOUETTE > 0)
     if (gCurGraphNodeObject != NULL) {
 #if defined(OBJECTS_REJ) && defined(F3DZEX_GBI_2)
@@ -622,6 +627,62 @@ void geo_process_scale(struct GraphNodeScale *node) {
     mtxf_scale_vec3f(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex], scaleVec);
     inc_mat_stack();
     append_dl_and_return(((struct GraphNodeDisplayList *)node));
+}
+
+/**
+ * Create a glow display list.
+ */
+Gfx *create_glow(u32 color) {
+    Gfx *displayList = alloc_display_list(3 * sizeof(Gfx));
+
+    if (displayList == NULL) {
+        return NULL;
+    }
+
+    Color r = (color >> 24) & 0xFF;
+    Color g = (color >> 16) & 0xFF;
+    Color b = (color >>  8) & 0xFF;
+    Alpha a =  color        & 0xFF;
+
+    // gDPPipeSync(displayList++);
+    gDPSetEnvColor(displayList++, r, g, b, a);
+    gSPDisplayList(displayList++, dl_glow);
+    gSPEndDisplayList(displayList);
+
+    return displayList;
+}
+
+/**
+ * Process a glow node. Similar to geo_process_billboard and geo_process_shadow.
+ */
+void geo_process_glow(struct GraphNodeGlow *node) {
+    if (gCurGraphNodeCamera != NULL && gCurGraphNodeObject != NULL) {
+        f32 radius = node->radius;
+        Vec3f baseScale = { radius, radius, radius };
+        Vec3f scale;
+
+        if (gCurGraphNodeHeldObject != NULL) {
+            vec3f_copy(scale, gCurGraphNodeHeldObject->objNode->header.gfx.scale);
+        } else if (gCurGraphNodeObject != NULL) {
+            vec3f_copy(scale, gCurGraphNodeObject->scale);
+        }
+        vec3f_mul(scale, baseScale);
+        // vec3f_copy(scale, baseScale);
+
+        Gfx *glowList = create_glow(node->color);
+
+        if (glowList != NULL) {
+            // mtxf_copy(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex]);
+            // mtxf_glow(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex], scale, node->zOffset);
+            mtxf_billboard(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex], gVec3fZero, scale, gCurGraphNodeCamera->roll);
+            inc_mat_stack();
+            geo_append_display_list((void *) VIRTUAL_TO_PHYSICAL(glowList), LAYER_TRANSPARENT);
+            gMatStackIndex--;
+        }
+    }
+    if (node->node.children != NULL) {
+        geo_process_node_and_siblings(node->node.children);
+    }
 }
 
 /**
@@ -1154,6 +1215,7 @@ void geo_process_node_and_siblings(struct GraphNode *firstNode) {
                     case GRAPH_NODE_TYPE_OBJECT:               geo_process_object              ((struct Object                       *) curGraphNode); break;
                     case GRAPH_NODE_TYPE_ANIMATED_PART:        geo_process_animated_part       ((struct GraphNodeAnimatedPart        *) curGraphNode); break;
                     case GRAPH_NODE_TYPE_BONE:                 geo_process_bone                ((struct GraphNodeBone                *) curGraphNode); break;
+                    case GRAPH_NODE_TYPE_GLOW:                 geo_process_glow                ((struct GraphNodeGlow                *) curGraphNode); break;
                     case GRAPH_NODE_TYPE_BILLBOARD:            geo_process_billboard           ((struct GraphNodeBillboard           *) curGraphNode); break;
                     case GRAPH_NODE_TYPE_DISPLAY_LIST:         geo_process_display_list        ((struct GraphNodeDisplayList         *) curGraphNode); break;
                     case GRAPH_NODE_TYPE_SCALE:                geo_process_scale               ((struct GraphNodeScale               *) curGraphNode); break;

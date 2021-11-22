@@ -377,6 +377,26 @@ struct GraphNodeBone *init_graph_node_bone(struct AllocOnlyPool *pool,
 }
 
 /**
+ * Allocates and returns a newly created glow node
+ */
+struct GraphNodeGlow *init_graph_node_glow(struct AllocOnlyPool *pool,
+                                           struct GraphNodeGlow *graphNode,
+                                           s16 zOffset, s16 radius, u32 color) {
+    if (pool != NULL) {
+        graphNode = alloc_only_pool_alloc(pool, sizeof(struct GraphNodeGlow));
+    }
+
+    if (graphNode != NULL) {
+        init_scene_graph_node_links(&graphNode->node, GRAPH_NODE_TYPE_GLOW);
+        graphNode->zOffset = zOffset;
+        graphNode->radius = radius;
+        graphNode->color = color;
+    }
+
+    return graphNode;
+}
+
+/**
  * Allocates and returns a newly created billboard node
  */
 struct GraphNodeBillboard *init_graph_node_billboard(struct AllocOnlyPool *pool,
