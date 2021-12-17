@@ -401,7 +401,6 @@ static struct Surface *find_floor_from_list(struct SurfaceNode *surfaceNode, s32
     register struct Surface *surf, *floor = NULL;
     register SurfaceType type = SURFACE_DEFAULT;
     register f32 height;
-    register s32 bufferY = (y + FIND_FLOOR_BUFFER);
 
     // Iterate through the list of floors until there are no more floors.
     while (surfaceNode != NULL) {
@@ -426,7 +425,7 @@ static struct Surface *find_floor_from_list(struct SurfaceNode *surfaceNode, s32
         }
 
         // Exclude all floors above the point.
-        if (bufferY < surf->lowerY) continue;
+        if (y < surf->lowerY) continue;
         // Check that the point is within the triangle bounds.
         if (!check_within_floor_triangle_bounds(x, z, surf)) continue;
 
@@ -437,7 +436,7 @@ static struct Surface *find_floor_from_list(struct SurfaceNode *surfaceNode, s32
         if (height < *pheight) continue;
 
         // Checks for floor interaction with a FIND_FLOOR_BUFFER unit buffer.
-        if (bufferY < height) continue;
+        if (y < height) continue;
 
         // Use the current floor
         *pheight = height;
@@ -445,7 +444,7 @@ static struct Surface *find_floor_from_list(struct SurfaceNode *surfaceNode, s32
 
         // Exit the loop if it's not possible for another floor to be closer
         // to the original point, or if COLLISION_FLAG_RETURN_FIRST.
-        if ((height == bufferY) || (gCollisionFlags & COLLISION_FLAG_RETURN_FIRST)) break;
+        if ((height == y) || (gCollisionFlags & COLLISION_FLAG_RETURN_FIRST)) break;
     }
     return floor;
 }
@@ -532,7 +531,7 @@ f32 unused_find_dynamic_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfl
 
     // Would normally cause PUs, but dynamic floors unload at that range.
     s32 x = xPos;
-    s32 y = yPos;
+    s32 y = yPos + FIND_FLOOR_BUFFER;
     s32 z = zPos;
 
     // Each level is split into cells to limit load, find the appropriate cell.
@@ -561,7 +560,7 @@ f32 find_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor) {
     //  float locations can return floors despite them not existing there.
     //  (Dynamic floors will unload due to the range.)
     s32 x = xPos;
-    s32 y = yPos;
+    s32 y = yPos + FIND_FLOOR_BUFFER;
     s32 z = zPos;
 
     *pfloor = NULL;
