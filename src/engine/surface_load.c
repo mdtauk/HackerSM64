@@ -623,22 +623,36 @@ void load_object_surfaces(TerrainData **data, TerrainData *vertexData) {
 }
 
 #ifdef AUTO_COLLISION_DISTANCE
-// From Kaze
-static void get_optimal_coll_dist(struct Object *obj) {
+// Auto Collision Distance from Kaze Emanuar.
+static f32 get_optimal_coll_dist(struct Object *obj) {
     register f32 thisVertDist, maxDist = 0.0f;
     Vec3f v;
-    TerrainData *collisionData = o->collisionData;
-    obj->oFlags |= OBJ_FLAG_DONT_CALC_COLL_DIST;
+    TerrainData *collisionData = obj->collisionData;
     collisionData++;
     register u32 vertsLeft = *(collisionData)++;
+
+    // Loop through the collision vertices to find the vertex
+    // with the furthest distance from the model's origin.
     while (vertsLeft) {
+        // Apply scale to the position
         vec3_prod(v, collisionData, obj->header.gfx.scale);
+
+        // Get the distance to the model's origin.
         thisVertDist = vec3_sumsq(v);
-        if (thisVertDist > maxDist) maxDist = thisVertDist;
+
+        // Check if it's further than the previous furthest vertex.
+        if (thisVertDist > maxDist) {
+            maxDist = thisVertDist;
+        }
+
+        // Move to the next vertex.
+        //! No bounds check on vertex data
         collisionData += 3;
         vertsLeft--;
     }
-    obj->oCollisionDistance = (sqrtf(maxDist) + 100.0f);
+
+    // Only run sqrtf once.
+    return sqrtf(maxDist) + 100.0f;
 }
 #endif
 
@@ -662,7 +676,15 @@ void load_object_collision_model(void) {
 
 #ifdef AUTO_COLLISION_DISTANCE
     if (!(o->oFlags & OBJ_FLAG_DONT_CALC_COLL_DIST)) {
-        get_optimal_coll_dist(o);
+        // Only calculate a new collision data the first time this function is run.
+        o->oFlags |= OBJ_FLAG_DONT_CALC_COLL_DIST;
+        if (collisionData == NULL) {
+            // No collision data, so no collision distance.
+            o->oCollisionDistance = 0.0f;
+        } else {
+            // Calculate a new collision distance based on the collision data.
+            o->oCollisionDistance = get_optimal_coll_dist(o);
+        }
     }
 #endif
 
